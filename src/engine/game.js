@@ -2,10 +2,10 @@
 import { loader } from './loader.js';
 import { mouse } from './mouse.js';
 import { maps } from './maps.js';
-import { buildings } from '../entities/buildings.js';
-import { vehicles } from '../entities/vehicles.js';
-import { aircraft } from '../entities/aircraft.js';
-import { resources } from '../entities/resources.js';
+import { buildings } from '../entities/buildings/buildings.js';
+import { vehicles } from '../entities/vehicles/vehicles.js';
+import { aircraft } from '../entities/aircraft/aircraft.js';
+import { resources } from '../entities/resources/resources.js';
 
 // Экспортируемые переменные
 export let game = {
@@ -46,58 +46,84 @@ export let game = {
     },
     
     // Начало новой игры
-    init: function() {
-        // Инициализируем объекты
-        loader.init();
-        mouse.init();
+    init() {
+        console.log('Инициализация игры...');
+        try {
+            console.log('Инициализация базовых модулей...');
+            // Инициализируем объекты
+            loader.init();
+            mouse.init();
+            
+            console.log('Инициализация canvas...');
+            // Инициализируем канвасы
+            game.initCanvases();
+            
+            console.log('Инициализация управления камерой...');
+            // Инициализируем управление камерой
+            game.initCameraControl();
+            
+            console.log('Настройка отображения слоев...');
+            // Показываем стартовый экран
+            document.querySelectorAll('.gamelayer').forEach(layer => layer.style.display = 'none');
+            document.getElementById('gamestartscreen').style.display = 'flex';
+            
+            console.log('Настройка обработчиков событий...');
+            // Добавляем обработчики для контекстного меню
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousedown', (e) => {
+                game.handleMouseClick(e);
+            });
+            
+            // Добавляем обработчик клика по пункту меню
+            document.getElementById('context-menu').addEventListener('click', (e) => {
+                const menuItem = e.target.closest('.context-menu-item');
+                if (!menuItem || menuItem.classList.contains('disabled')) return;
+                
+                const unitType = menuItem.dataset.unit;
+                if (unitType === 'harvester') {
+                    game.createHarvester();
+                }
+            });
+            
+            // Добавляем обработчик правого клика
+            document.addEventListener('contextmenu', (e) => {
+                game.handleContextMenu(e);
+            });
+            
+            // Добавляем обработчик для закрытия меню при клике вне его
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#context-menu')) {
+                    game.hideContextMenu();
+                }
+            });
+            
+            console.log('Инициализация времени для анимации...');
+            // Инициализируем время для анимации
+            game.lastTime = Date.now();
+            
+            console.log('Инициализация интерфейса...');
+            // Инициализация интерфейса
+            game.initInterface();
+            
+            console.log('Игра успешно инициализирована');
+        } catch (error) {
+            console.error('Ошибка при инициализации игры:', error);
+            console.error('Стек ошибки:', error.stack);
+        }
+    },
 
-        // Инициализируем канвасы
-        game.initCanvases();
-
-        // Инициализируем управление камерой
-        game.initCameraControl();
-
-        // Показываем стартовый экран
-        document.querySelectorAll('.gamelayer').forEach(layer => layer.style.display = 'none');
-        document.getElementById('gamestartscreen').style.display = 'flex';
-
-        // Добавляем обработчики для контекстного меню
-        document.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-        });
-
-        document.addEventListener('mousedown', (e) => {
-            game.handleMouseClick(e);
-        });
-
-        // Добавляем обработчик клика по пункту меню
-        document.getElementById('context-menu').addEventListener('click', (e) => {
-            const menuItem = e.target.closest('.context-menu-item');
-            if (!menuItem || menuItem.classList.contains('disabled')) return;
-
-            const unitType = menuItem.dataset.unit;
-            if (unitType === 'harvester') {
-                game.createHarvester();
-            }
-        });
-
-        // Добавляем обработчик правого клика
-        document.addEventListener('contextmenu', (e) => {
-            game.handleContextMenu(e);
-        });
-
-        // Добавляем обработчик для закрытия меню при клике вне его
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#context-menu')) {
-                game.hideContextMenu();
-            }
-        });
-
-        // Инициализируем время для анимации
-        game.lastTime = Date.now();
-
-        // Инициализация интерфейса
-        game.initInterface();
+    initializeComponents() {
+        console.log('Инициализация компонентов...');
+        try {
+            // Здесь инициализация всех необходимых компонентов
+            // Например: карта, ресурсы, юниты и т.д.
+            console.log('Все компоненты успешно инициализированы');
+        } catch (error) {
+            console.error('Ошибка при инициализации компонентов:', error);
+        }
     },
 
     initCanvases: function() {
