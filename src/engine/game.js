@@ -1,7 +1,7 @@
 // Импорты
 import { loader } from './loader.js';
-import { mouse } from './mouse.js';
-import { maps } from './maps.js';
+import { Mouse } from './mouse.js';
+import { Maps, TILE_SIZE } from './maps.js';
 import { buildings } from '../entities/buildings/buildings.js';
 import { vehicles } from '../entities/vehicles/vehicles.js';
 import { aircraft } from '../entities/aircraft/aircraft.js';
@@ -48,82 +48,92 @@ export let game = {
     // Начало новой игры
     init() {
         console.log('Инициализация игры...');
+        
         try {
-            console.log('Инициализация базовых модулей...');
-            // Инициализируем объекты
-            loader.init();
-            mouse.init();
+            // Инициализируем канвас
+            this.initializeCanvas();
             
-            console.log('Инициализация canvas...');
-            // Инициализируем канвасы
-            game.initCanvases();
+            // Инициализируем камеру
+            this.camera = {
+                x: 0,
+                y: 0
+            };
             
-            console.log('Инициализация управления камерой...');
-            // Инициализируем управление камерой
-            game.initCameraControl();
+            // Инициализируем обработчики мыши
+            Mouse.init();
             
-            console.log('Настройка отображения слоев...');
-            // Показываем стартовый экран
-            document.querySelectorAll('.gamelayer').forEach(layer => layer.style.display = 'none');
-            document.getElementById('gamestartscreen').style.display = 'flex';
+            // Инициализируем компоненты
+            this.initializeComponents();
             
-            console.log('Настройка обработчиков событий...');
-            // Добавляем обработчики для контекстного меню
-            document.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-            });
-            
-            document.addEventListener('mousedown', (e) => {
-                game.handleMouseClick(e);
-            });
-            
-            // Добавляем обработчик клика по пункту меню
-            document.getElementById('context-menu').addEventListener('click', (e) => {
-                const menuItem = e.target.closest('.context-menu-item');
-                if (!menuItem || menuItem.classList.contains('disabled')) return;
-                
-                const unitType = menuItem.dataset.unit;
-                if (unitType === 'harvester') {
-                    game.createHarvester();
-                }
-            });
-            
-            // Добавляем обработчик правого клика
-            document.addEventListener('contextmenu', (e) => {
-                game.handleContextMenu(e);
-            });
-            
-            // Добавляем обработчик для закрытия меню при клике вне его
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('#context-menu')) {
-                    game.hideContextMenu();
-                }
-            });
-            
-            console.log('Инициализация времени для анимации...');
-            // Инициализируем время для анимации
-            game.lastTime = Date.now();
-            
-            console.log('Инициализация интерфейса...');
-            // Инициализация интерфейса
-            game.initInterface();
-            
-            console.log('Игра успешно инициализирована');
+            console.log('Игра инициализирована');
         } catch (error) {
             console.error('Ошибка при инициализации игры:', error);
-            console.error('Стек ошибки:', error.stack);
         }
     },
 
+    initializeCanvas() {
+        console.log('Инициализация канваса...');
+        
+        // Получаем канвасы
+        this.backgroundCanvas = document.getElementById('gamebackgroundcanvas');
+        this.foregroundCanvas = document.getElementById('gameforegroundcanvas');
+        
+        if (!this.backgroundCanvas || !this.foregroundCanvas) {
+            throw new Error('Канвасы не найдены');
+        }
+        
+        // Получаем контексты
+        this.backgroundContext = this.backgroundCanvas.getContext('2d');
+        this.foregroundContext = this.foregroundCanvas.getContext('2d');
+        
+        // Устанавливаем размеры канвасов
+        this.canvasWidth = window.innerWidth;
+        this.canvasHeight = window.innerHeight;
+        
+        this.backgroundCanvas.width = this.canvasWidth;
+        this.backgroundCanvas.height = this.canvasHeight;
+        this.foregroundCanvas.width = this.canvasWidth;
+        this.foregroundCanvas.height = this.canvasHeight;
+        
+        // Инициализируем камеру
+        this.camera = { x: 0, y: 0 };
+        
+        console.log('Канвас инициализирован');
+    },
+    
     initializeComponents() {
         console.log('Инициализация компонентов...');
-        try {
-            // Здесь инициализация всех необходимых компонентов
-            // Например: карта, ресурсы, юниты и т.д.
-            console.log('Все компоненты успешно инициализированы');
-        } catch (error) {
-            console.error('Ошибка при инициализации компонентов:', error);
-        }
+        
+        // Инициализируем туман войны
+        this.fogOfWar = {
+            grid: [],
+            init: function() {
+                // Инициализация сетки тумана войны
+                this.grid = [];
+                for (let y = 0; y < Maps.mapSize.height; y++) {
+                    this.grid[y] = [];
+                    for (let x = 0; x < Maps.mapSize.width; x++) {
+                        this.grid[y][x] = 1; // 1 = туман, 0 = видимая область
+                    }
+                }
+            }
+        };
+        
+        // Инициализируем обработчики событий
+        this.initEventHandlers();
+        
+        console.log('Компоненты инициализированы');
+    },
+    
+    initEventHandlers() {
+        console.log('Инициализация обработчиков событий...');
+        
+        // Предотвращаем стандартное контекстное меню
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+        
+        console.log('Обработчики событий инициализированы');
     },
 
     initCanvases: function() {
@@ -238,14 +248,14 @@ export let game = {
     },
 
     drawMap: function() {
-        const tileSize = maps.tileSize;
+        const tileSize = Maps.tileSize;
         const time = Date.now();
         
         // Определяем видимую область
         const startX = Math.max(0, Math.floor(-game.camera.x / tileSize));
         const startY = Math.max(0, Math.floor(-game.camera.y / tileSize));
-        const endX = Math.min(maps.mapSize.width, Math.ceil((-game.camera.x + game.canvasWidth) / tileSize));
-        const endY = Math.min(maps.mapSize.height, Math.ceil((-game.camera.y + game.canvasHeight) / tileSize));
+        const endX = Math.min(Maps.mapSize.width, Math.ceil((-game.camera.x + game.canvasWidth) / tileSize));
+        const endY = Math.min(Maps.mapSize.height, Math.ceil((-game.camera.y + game.canvasHeight) / tileSize));
 
         // Рисуем видимые тайлы
         for (let y = startY; y < endY; y++) {
@@ -568,7 +578,7 @@ export let game = {
     },
 
     drawGrid: function() {
-        const tileSize = maps.tileSize;
+        const tileSize = Maps.tileSize;
         game.backgroundContext.strokeStyle = '#444';
         game.backgroundContext.lineWidth = 1;
 
@@ -629,8 +639,8 @@ export let game = {
         };
 
         // Подсчитываем ресурсы на карте
-        for (let y = 0; y < maps.mapSize.height; y++) {
-            for (let x = 0; x < maps.mapSize.width; x++) {
+        for (let y = 0; y < Maps.mapSize.height; y++) {
+            for (let x = 0; x < Maps.mapSize.width; x++) {
                 const tile = game.terrain[y]?.[x];
                 if (tile && counts.hasOwnProperty(tile)) {
                     counts[tile]++;
@@ -649,20 +659,20 @@ export let game = {
         game.currentLevel = levelNumber;
         
         // Инициализируем карту
-        game.terrain = maps.initialize(levelNumber);
+        game.terrain = Maps.initialize(levelNumber);
         
         // Устанавливаем размеры игрового мира
-        game.worldWidth = maps.mapSize.width * maps.tileSize;
-        game.worldHeight = maps.mapSize.height * maps.tileSize;
+        game.worldWidth = Maps.mapSize.width * Maps.tileSize;
+        game.worldHeight = Maps.mapSize.height * Maps.tileSize;
         
         // Центрируем камеру на стартовой позиции
-        game.camera.x = -maps.level1.startPosition.x * maps.tileSize + game.canvasWidth / 2;
-        game.camera.y = -maps.level1.startPosition.y * maps.tileSize + game.canvasHeight / 2;
+        game.camera.x = -Maps.level1.startPosition.x * Maps.tileSize + game.canvasWidth / 2;
+        game.camera.y = -Maps.level1.startPosition.y * Maps.tileSize + game.canvasHeight / 2;
 
         // Инициализируем позицию базы игрока
         game.playerBase = {
-            x: maps.level1.startPosition.x,
-            y: maps.level1.startPosition.y,
+            x: Maps.level1.startPosition.x,
+            y: Maps.level1.startPosition.y,
             hp: 1000,
             maxHp: 1000,
             size: 3, // Размер базы 3x3
@@ -728,9 +738,9 @@ export let game = {
         init: function() {
             // Инициализируем сетку тумана войны
             this.grid = [];
-            for (let y = 0; y < maps.mapSize.height; y++) {
+            for (let y = 0; y < Maps.mapSize.height; y++) {
                 this.grid[y] = [];
-                for (let x = 0; x < maps.mapSize.width; x++) {
+                for (let x = 0; x < Maps.mapSize.width; x++) {
                     this.grid[y][x] = 1; // 1 = туман, 0 = видимая область
                 }
             }
@@ -741,15 +751,15 @@ export let game = {
             const visionRange = 5; // Радиус видимости
             
             // Очищаем старую видимость
-            for (let y = 0; y < maps.mapSize.height; y++) {
-                for (let x = 0; x < maps.mapSize.width; x++) {
+            for (let y = 0; y < Maps.mapSize.height; y++) {
+                for (let x = 0; x < Maps.mapSize.width; x++) {
                     this.grid[y][x] = 1;
                 }
             }
             
             // Открываем видимость вокруг базы игрока
-            for (let y = 0; y < maps.mapSize.height; y++) {
-                for (let x = 0; x < maps.mapSize.width; x++) {
+            for (let y = 0; y < Maps.mapSize.height; y++) {
+                for (let x = 0; x < Maps.mapSize.width; x++) {
                     if (game.terrain[y]?.[x] === 'player_base') {
                         this.revealArea(x, y, visionRange);
                     }
@@ -760,8 +770,8 @@ export let game = {
         },
         
         revealArea: function(centerX, centerY, range) {
-            for (let y = Math.max(0, centerY - range); y < Math.min(maps.mapSize.height, centerY + range + 1); y++) {
-                for (let x = Math.max(0, centerX - range); x < Math.min(maps.mapSize.width, centerX + range + 1); x++) {
+            for (let y = Math.max(0, centerY - range); y < Math.min(Maps.mapSize.height, centerY + range + 1); y++) {
+                for (let x = Math.max(0, centerX - range); x < Math.min(Maps.mapSize.width, centerX + range + 1); x++) {
                     const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
                     if (distance <= range) {
                         this.grid[y][x] = 0;
@@ -780,20 +790,20 @@ export let game = {
         ctx.fillRect(0, 0, minimap.width, minimap.height);
         
         // Вычисляем масштаб
-        const scaleX = minimap.width / (maps.mapSize.width * maps.tileSize);
-        const scaleY = minimap.height / (maps.mapSize.height * maps.tileSize);
+        const scaleX = minimap.width / (Maps.mapSize.width * Maps.tileSize);
+        const scaleY = minimap.height / (Maps.mapSize.height * Maps.tileSize);
         
         // Рисуем объекты на карте
-        for (let y = 0; y < maps.mapSize.height; y++) {
-            for (let x = 0; x < maps.mapSize.width; x++) {
+        for (let y = 0; y < Maps.mapSize.height; y++) {
+            for (let x = 0; x < Maps.mapSize.width; x++) {
                 // Если область в тумане войны, рисуем серым
                 if (game.fogOfWar.grid[y]?.[x] === 1) {
                     ctx.fillStyle = '#2a2a2a';
                     ctx.fillRect(
-                        x * maps.tileSize * scaleX,
-                        y * maps.tileSize * scaleY,
-                        maps.tileSize * scaleX,
-                        maps.tileSize * scaleY
+                        x * Maps.tileSize * scaleX,
+                        y * Maps.tileSize * scaleY,
+                        Maps.tileSize * scaleX,
+                        Maps.tileSize * scaleY
                     );
                     continue;
                 }
@@ -818,10 +828,10 @@ export let game = {
                             break;
                     }
                     ctx.fillRect(
-                        x * maps.tileSize * scaleX,
-                        y * maps.tileSize * scaleY,
-                        maps.tileSize * scaleX,
-                        maps.tileSize * scaleY
+                        x * Maps.tileSize * scaleX,
+                        y * Maps.tileSize * scaleY,
+                        Maps.tileSize * scaleX,
+                        Maps.tileSize * scaleY
                     );
                 }
             }
@@ -843,7 +853,7 @@ export let game = {
 
     // Отрисовка юнитов
     drawUnits: function() {
-        const tileSize = maps.tileSize;
+        const tileSize = Maps.tileSize;
         
         // Рисуем все юниты
         units.list.forEach(unit => {
@@ -878,31 +888,16 @@ export let game = {
 
     // Обработка кликов мыши
     handleMouseClick: function(event) {
-        const x = Math.floor((event.offsetX - game.camera.x) / maps.tileSize);
-        const y = Math.floor((event.offsetY - game.camera.y) / maps.tileSize);
-
-        // Левый клик
+        console.log('Клик мышью:', event.button, event.clientX, event.clientY);
+        
+        // Обработка левого клика (выбор объекта)
         if (event.button === 0) {
-            // Проверяем, кликнули ли по юниту
-            const clickedUnit = this.units.find(unit => 
-                unit.x === x && unit.y === y
-            );
-
-            if (clickedUnit) {
-                this.selectedUnit = clickedUnit;
-            } else {
-                this.selectedUnit = null;
-            }
+            console.log('Левый клик');
         }
-        // Правый клик
-        else if (event.button === 2) {
-            // Проверяем, кликнули ли по базе
-            if (this.checkBaseClick(x, y)) {
-                this.showContextMenu(event.clientX, event.clientY);
-                return;
-            }
-            // Скрываем контекстное меню при клике вне базы
-            this.hideContextMenu();
+        
+        // Обработка правого клика (действие)
+        if (event.button === 2) {
+            console.log('Правый клик');
         }
     },
 
@@ -1064,8 +1059,8 @@ export let game = {
         event.preventDefault();
         
         // Проверяем клик по базе
-        const gridX = Math.floor((event.offsetX - this.camera.x) / maps.tileSize);
-        const gridY = Math.floor((event.offsetY - this.camera.y) / maps.tileSize);
+        const gridX = Math.floor((event.offsetX - this.camera.x) / Maps.tileSize);
+        const gridY = Math.floor((event.offsetY - this.camera.y) / Maps.tileSize);
         
         if (this.checkBaseClick(gridX, gridY)) {
             const contextMenu = document.getElementById('context-menu');
@@ -1125,9 +1120,9 @@ export let game = {
         if (!this.playerBase) return;
 
         // Получаем экранные координаты базы
-        const screenX = this.playerBase.x * maps.tileSize - this.camera.x;
-        const screenY = this.playerBase.y * maps.tileSize - this.camera.y;
-        const size = this.playerBase.size * maps.tileSize;
+        const screenX = this.playerBase.x * Maps.tileSize - this.camera.x;
+        const screenY = this.playerBase.y * Maps.tileSize - this.camera.y;
+        const size = this.playerBase.size * Maps.tileSize;
         
         // Проверяем, наведена ли мышь на базу
         const isMouseOver = 
@@ -1289,9 +1284,9 @@ function drawBaseStatus(base) {
     if (!base) return;
     
     const ctx = game.foregroundContext;
-    const screenX = base.x * maps.tileSize + game.camera.x;
-    const screenY = base.y * maps.tileSize + game.camera.y - 20;
-    const width = maps.tileSize * 3; // Ширина базы 3 тайла
+    const screenX = base.x * Maps.tileSize + game.camera.x;
+    const screenY = base.y * Maps.tileSize + game.camera.y - 20;
+    const width = Maps.tileSize * 3; // Ширина базы 3 тайла
     
     // Рисуем полоску здоровья
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';

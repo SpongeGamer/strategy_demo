@@ -1,150 +1,95 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>RTS Demo</title>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        
-        <!-- Базовые модули -->
-        <script src="./src/engine/loader.js" type="module"></script>
-        <script src="./src/engine/mouse.js" type="module"></script>
-        <script src="./src/engine/maps.js" type="module"></script>
-        <script src="./src/engine/game.js" type="module"></script>
-        <script src="./src/engine/state.js" type="module"></script>
-        
-        <!-- Игровые сущности -->
-        <script src="./src/entities/base-entity.js" type="module"></script>
-        <script src="./src/entities/buildings/buildings.js" type="module"></script>
-        <script src="./src/entities/units/units.js" type="module"></script>
-        <script src="./src/entities/vehicles/vehicles.js" type="module"></script>
-        <script src="./src/entities/aircraft/aircraft.js" type="module"></script>
-        <script src="./src/entities/resources/resources.js" type="module"></script>
-        
-        <!-- Вспомогательные модули -->
-        <script src="./src/utils/pathfinding-browser.min.js"></script>
-        <script src="./src/utils/astar.js" type="module"></script>
-        <script src="./src/utils/fog.js" type="module"></script>
-        <script src="./src/ui/sidebar.js" type="module"></script>
-        <script src="./src/ui/interface.js" type="module"></script>
-        <script src="./src/ui/minimap.js" type="module"></script>
-        
-        <!-- Игровые режимы -->
-        <script src="./src/game-modes/singleplayer.js" type="module"></script>
-        
-        <!-- Основной игровой модуль -->
+        <link rel="stylesheet" href="src/css/styles.css">
+    </head>
+    <body>
+        <!-- Стартовый экран -->
+        <div id="startscreen" class="screen">
+            <div class="title">RTS Demo</div>
+            <div class="menu">
+                <button id="campaign-button" class="menu-button">Campaign</button>
+                <button id="skirmish-button" class="menu-button">Skirmish</button>
+                <button id="multiplayer-button" class="menu-button">Multiplayer</button>
+                <button id="options-button" class="menu-button">Options</button>
+            </div>
+        </div>
+
+        <!-- Игровой интерфейс -->
+        <div id="gameinterfacescreen" class="screen" style="display: none;">
+            <!-- Канвасы для игры -->
+            <canvas id="gamebackgroundcanvas" class="gamecanvas"></canvas>
+            <canvas id="gameforegroundcanvas" class="gamecanvas"></canvas>
+        </div>
+
+        <!-- Загрузка скриптов -->
         <script type="module">
             import { game } from './src/engine/game.js';
             import { singleplayer } from './src/game-modes/singleplayer.js';
-            import { initInterface } from './src/ui/interface.js';
-            import { initMinimap } from './src/ui/minimap.js';
-            import { initSidebar } from './src/ui/sidebar.js';
-            import { GameState } from './src/engine/state.js';
+            import { Mouse } from './src/engine/mouse.js';
+            import { Interface } from './src/ui/interface.js';
             
-            window.addEventListener('load', () => {
+            // Инициализация игры
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM загружен, инициализация игры...');
+                
                 try {
-                    console.log('Страница загружена, начинаем инициализацию...');
-                    
-                    // Инициализация состояния
-                    GameState.init();
-                    console.log('GameState инициализирован');
-                    
-                    // Инициализация игры
+                    // Инициализируем игровой движок
                     game.init();
-                    console.log('Игра инициализирована');
+                    console.log('Игровой движок инициализирован');
                     
-                    // Инициализация интерфейса
-                    initInterface();
+                    // Инициализируем обработчик мыши
+                    Mouse.init();
+                    console.log('Обработчик мыши инициализирован');
+                    
+                    // Инициализируем интерфейс
+                    Interface.init();
                     console.log('Интерфейс инициализирован');
                     
-                    // Инициализация миникарты
-                    initMinimap();
-                    console.log('Миникарта инициализирована');
-                    
-                    // Инициализация боковой панели
-                    initSidebar();
-                    console.log('Боковая панель инициализирована');
-                    
-                    // Добавляем обработчики событий
-                    document.getElementById('singleplayer').addEventListener('click', () => {
-                        console.log('Нажата кнопка Campaign');
-                        try {
+                    // Добавляем обработчики для кнопок меню
+                    const campaignButton = document.getElementById('campaign-button');
+                    if (campaignButton) {
+                        campaignButton.addEventListener('click', () => {
+                            console.log('Нажата кнопка Campaign');
                             singleplayer.start();
-                            console.log('Режим одиночной игры запущен');
-                        } catch (error) {
-                            console.error('Ошибка при запуске одиночной игры:', error);
-                        }
-                    });
+                        });
+                    } else {
+                        console.error('Кнопка Campaign не найдена!');
+                    }
                     
-                    console.log('Все компоненты успешно инициализированы');
+                    const skirmishButton = document.getElementById('skirmish-button');
+                    if (skirmishButton) {
+                        skirmishButton.addEventListener('click', () => {
+                            console.log('Нажата кнопка Skirmish');
+                            alert('Skirmish mode is not implemented yet');
+                        });
+                    }
+                    
+                    const multiplayerButton = document.getElementById('multiplayer-button');
+                    if (multiplayerButton) {
+                        multiplayerButton.addEventListener('click', () => {
+                            console.log('Нажата кнопка Multiplayer');
+                            alert('Multiplayer mode is not implemented yet');
+                        });
+                    }
+                    
+                    const optionsButton = document.getElementById('options-button');
+                    if (optionsButton) {
+                        optionsButton.addEventListener('click', () => {
+                            console.log('Нажата кнопка Options');
+                            alert('Options are not implemented yet');
+                        });
+                    }
+                    
+                    console.log('Обработчики кнопок добавлены');
+                    console.log('Игра готова к запуску');
                 } catch (error) {
-                    console.error('Ошибка при инициализации:', error);
+                    console.error('Ошибка при инициализации игры:', error);
                 }
             });
         </script>
-
-        <link rel="stylesheet" href="./src/css/styles.css" type="text/css" media="screen" charset="utf-8">
-    </head>
-    <body>
-        <main id="gamecontainer">
-            <section id="gamestartscreen" class="gamelayer">
-                <h1>RTS Demo</h1>
-                <button id="singleplayer" class="btn">Campaign</button>
-                <button id="multiplayer" class="btn">Multiplayer</button>
-            </section>
-            
-            <section id="gameinterfacescreen" class="gamelayer">
-                <div id="gamecanvasarea">
-                    <canvas id="gamebackgroundcanvas"></canvas>
-                    <canvas id="gameforegroundcanvas"></canvas>
-                </div>
-                
-                <div id="gameinterface">
-                    <section id="resources">
-                        <div class="resource">
-                            <div class="resource-icon trees"></div>
-                            <span>Деревья: <span id="trees-count">0</span></span>
-                        </div>
-                        <div class="resource">
-                            <div class="resource-icon metal"></div>
-                            <span>Металл: <span id="metal-count">0</span></span>
-                        </div>
-                        <div class="resource">
-                            <div class="resource-icon gold"></div>
-                            <span>Золото: <span id="gold-count">0</span></span>
-                        </div>
-                    </section>
-
-                    <section id="command-panel">
-                        <div class="command-group">
-                            <button class="command-button" data-action="buildings" title="Строительство">
-                                <span class="icon buildings"></span>
-                            </button>
-                            <button class="command-button" data-action="defenses" title="Оборона">
-                                <span class="icon defenses"></span>
-                            </button>
-                        </div>
-                        <div class="command-group">
-                            <button class="command-button" data-action="infantry" title="Пехота">
-                                <span class="icon infantry"></span>
-                            </button>
-                            <button class="command-button" data-action="vehicles" title="Техника">
-                                <span class="icon vehicles"></span>
-                            </button>
-                            <button class="command-button" data-action="aircraft" title="Авиация">
-                                <span class="icon aircraft"></span>
-                            </button>
-                        </div>
-                    </section>
-
-                    <section id="minimap">
-                        <canvas id="minimapcanvas"></canvas>
-                    </section>
-                </div>
-            </section>
-
-            <section id="loadingscreen" class="gamelayer">
-                <div id="loadingmessage"></div>
-            </section>
-        </main>
     </body>
 </html>

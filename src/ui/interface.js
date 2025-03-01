@@ -31,26 +31,171 @@ const contextMenuTemplate = {
     }
 };
 
-export function initInterface() {
-    const gameInterface = document.getElementById('gameinterface');
+// Модуль для работы с интерфейсом
+export const Interface = {
+    // Инициализация интерфейса
+    init() {
+        console.log('Инициализация интерфейса...');
+        
+        try {
+            // Проверяем наличие элементов интерфейса
+            const startScreen = document.getElementById('startscreen');
+            if (!startScreen) {
+                console.error('Элемент startscreen не найден!');
+            }
+            
+            const gameInterface = document.getElementById('gameinterfacescreen');
+            if (!gameInterface) {
+                console.error('Элемент gameinterfacescreen не найден!');
+            }
+            
+            // Добавляем обработчик клика по игровому интерфейсу
+            gameInterface.addEventListener('click', (e) => {
+                this.handleInterfaceClick(e);
+            });
+            
+            // Добавляем обработчик правого клика по игровому интерфейсу
+            gameInterface.addEventListener('contextmenu', (e) => {
+                this.handleInterfaceRightClick(e);
+                e.preventDefault();
+            });
+            
+            console.log('Интерфейс инициализирован');
+        } catch (error) {
+            console.error('Ошибка при инициализации интерфейса:', error);
+        }
+    },
     
-    // Создаем контекстное меню
-    const contextMenu = createContextMenu();
-    gameInterface.appendChild(contextMenu);
+    // Обработка клика по игровому интерфейсу
+    handleInterfaceClick(e) {
+        console.log('Клик по игровому интерфейсу');
+        
+        // Закрываем контекстное меню, если оно открыто
+        const contextMenu = document.getElementById('context-menu');
+        if (contextMenu && contextMenu.style.display === 'block') {
+            contextMenu.style.display = 'none';
+        }
+    },
     
-    // Обработчики событий через делегирование
-    gameInterface.addEventListener('click', handleInterfaceClick);
-}
+    // Обработка правого клика по игровому интерфейсу
+    handleInterfaceRightClick(e) {
+        console.log('Правый клик по игровому интерфейсу');
+        
+        // Получаем координаты клика
+        const x = e.clientX;
+        const y = e.clientY;
+        
+        // Показываем контекстное меню
+        this.showContextMenu(x, y);
+    },
+    
+    // Отображение контекстного меню
+    showContextMenu(x, y) {
+        console.log(`Показываем контекстное меню на координатах ${x}, ${y}`);
+        
+        // Получаем контекстное меню
+        let contextMenu = document.getElementById('context-menu');
+        
+        // Если меню не существует, создаем его
+        if (!contextMenu) {
+            contextMenu = document.createElement('div');
+            contextMenu.id = 'context-menu';
+            document.getElementById('gameinterfacescreen').appendChild(contextMenu);
+        }
+        
+        // Очищаем меню
+        contextMenu.innerHTML = '';
+        
+        // Заполняем меню базовыми действиями
+        contextMenu.innerHTML = `
+            <div class="context-menu-item" data-action="move">
+                <div class="icon">🚶</div>
+                <div class="info">
+                    <div class="name">Переместиться</div>
+                    <div class="description">Переместить выбранные юниты</div>
+                </div>
+            </div>
+            <div class="context-menu-item" data-action="attack">
+                <div class="icon">⚔️</div>
+                <div class="info">
+                    <div class="name">Атаковать</div>
+                    <div class="description">Атаковать цель</div>
+                </div>
+            </div>
+            <div class="context-menu-item" data-action="patrol">
+                <div class="icon">👁️</div>
+                <div class="info">
+                    <div class="name">Патрулировать</div>
+                    <div class="description">Патрулировать область</div>
+                </div>
+            </div>
+        `;
+        
+        // Добавляем обработчики для пунктов меню
+        contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.getAttribute('data-action');
+                this.handleContextMenuAction(action, x, y);
+                contextMenu.style.display = 'none';
+            });
+        });
+        
+        // Отображаем меню
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        
+        // Закрываем меню при клике вне его
+        const closeMenu = (e) => {
+            if (!contextMenu.contains(e.target)) {
+                contextMenu.style.display = 'none';
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        
+        // Добавляем обработчик с небольшой задержкой
+        setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+        }, 100);
+    },
+    
+    // Обработка действий из контекстного меню
+    handleContextMenuAction(action, x, y) {
+        console.log(`Выполняем действие ${action} на координатах ${x}, ${y}`);
+        
+        // Здесь будет код для обработки различных действий
+        switch (action) {
+            case 'move':
+                console.log('Перемещение юнитов');
+                break;
+            case 'attack':
+                console.log('Атака цели');
+                break;
+            case 'patrol':
+                console.log('Патрулирование области');
+                break;
+            default:
+                console.log(`Неизвестное действие: ${action}`);
+        }
+    }
+};
 
-function createContextMenu() {
-    const menu = document.createElement('div');
-    menu.id = 'context-menu';
+function initContextMenu() {
+    const menu = document.getElementById('context-menu');
+    if (!menu) {
+        console.error('Элемент context-menu не найден!');
+        return;
+    }
+    
     menu.style.display = 'none';
+    
+    // Очищаем содержимое меню
+    menu.innerHTML = '';
     
     // Создаем группы меню
     Object.entries(contextMenuTemplate).forEach(([group, items]) => {
         const groupElement = document.createElement('div');
-        groupElement.className = 'context-menu-group';
+        groupElement.className = `context-menu-group ${group}`;
         
         Object.entries(items).forEach(([id, item]) => {
             const itemElement = createMenuItem(id, item);
@@ -59,8 +204,6 @@ function createContextMenu() {
         
         menu.appendChild(groupElement);
     });
-    
-    return menu;
 }
 
 function createMenuItem(id, item) {
@@ -80,72 +223,125 @@ function createMenuItem(id, item) {
     return element;
 }
 
-function handleInterfaceClick(e) {
-    // Обработка клика по кнопкам команд
-    if (e.target.closest('.command-button')) {
-        const button = e.target.closest('.command-button');
-        const action = button.dataset.action;
-        handleCommand(action);
+function handleCommand(action) {
+    console.log('Обработка команды:', action);
+    
+    const contextMenu = document.getElementById('context-menu');
+    if (!contextMenu) {
+        console.error('Элемент context-menu не найден!');
+        return;
     }
     
-    // Обработка клика по пунктам контекстного меню
-    if (e.target.closest('.context-menu-item')) {
-        const item = e.target.closest('.context-menu-item');
-        const id = item.dataset.id;
-        handleMenuItemClick(id);
-    }
-}
-
-function handleCommand(action) {
-    const contextMenu = document.getElementById('context-menu');
+    // Проверяем, что контекстное меню видимо
+    console.log('Текущее состояние контекстного меню:', contextMenu.style.display);
+    
+    // Проверяем наличие группы в шаблоне
+    const groupExists = Object.keys(contextMenuTemplate).includes(action);
+    console.log(`Группа ${action} ${groupExists ? 'найдена' : 'не найдена'} в шаблоне`);
+    
+    // Если группа не найдена, используем buildings по умолчанию
+    const group = groupExists ? action : 'buildings';
+    
+    // Выводим содержимое группы
+    console.log(`Содержимое группы ${group}:`, contextMenuTemplate[group]);
     
     switch (action) {
         case 'buildings':
+            console.log('Показываем меню зданий');
             showContextMenu(contextMenu, 'buildings');
             break;
         case 'defenses':
-            // Реализовать
+            console.log('Показываем меню обороны');
+            showContextMenu(contextMenu, 'defenses');
             break;
         case 'infantry':
-            // Реализовать
+            console.log('Показываем меню пехоты');
+            showContextMenu(contextMenu, 'infantry');
             break;
         case 'vehicles':
-            // Реализовать
+            console.log('Показываем меню техники');
+            showContextMenu(contextMenu, 'vehicles');
             break;
         case 'aircraft':
-            // Реализовать
+            console.log('Показываем меню авиации');
+            showContextMenu(contextMenu, 'aircraft');
             break;
+        default:
+            console.log('Неизвестная команда:', action);
     }
 }
 
 function showContextMenu(menu, group) {
-    const button = document.querySelector(`[data-action="${group}"]`);
-    const rect = button.getBoundingClientRect();
+    console.log(`Показываем контекстное меню для группы: ${group}`);
     
+    const button = document.querySelector(`[data-action="${group}"]`);
+    if (!button) {
+        console.error(`Кнопка с действием ${group} не найдена!`);
+        return;
+    }
+    
+    const rect = button.getBoundingClientRect();
+    console.log('Позиция кнопки:', rect);
+    
+    // Проверяем, есть ли группа в шаблоне
+    const groupExists = Object.keys(contextMenuTemplate).includes(group);
+    if (!groupExists) {
+        console.error(`Группа ${group} не найдена в шаблоне меню!`);
+        return;
+    }
+    
+    // Очищаем меню перед заполнением
+    menu.innerHTML = '';
+    
+    // Создаем группу меню
+    const groupElement = document.createElement('div');
+    groupElement.className = `context-menu-group ${group}`;
+    
+    // Заполняем группу элементами
+    Object.entries(contextMenuTemplate[group] || {}).forEach(([id, item]) => {
+        const itemElement = createMenuItem(id, item);
+        groupElement.appendChild(itemElement);
+    });
+    
+    menu.appendChild(groupElement);
+    
+    // Устанавливаем позицию меню
     menu.style.display = 'block';
     menu.style.left = `${rect.left}px`;
-    menu.style.bottom = `${window.innerHeight - rect.top}px`;
+    menu.style.top = `${rect.bottom + 5}px`; // Размещаем под кнопкой
     
-    // Показываем только нужную группу
-    menu.querySelectorAll('.context-menu-group').forEach(groupElement => {
-        groupElement.style.display = groupElement.classList.contains(group) ? 'block' : 'none';
-    });
+    console.log('Меню отображено:', menu.style.display, menu.style.left, menu.style.top);
     
     // Закрываем меню при клике вне его
     const closeMenu = (e) => {
         if (!menu.contains(e.target) && !button.contains(e.target)) {
             menu.style.display = 'none';
             document.removeEventListener('click', closeMenu);
+            console.log('Меню закрыто');
         }
     };
     
-    document.addEventListener('click', closeMenu);
+    // Удаляем предыдущий обработчик, если он был
+    document.removeEventListener('click', closeMenu);
+    
+    // Добавляем обработчик с небольшой задержкой, чтобы избежать немедленного закрытия
+    setTimeout(() => {
+        document.addEventListener('click', closeMenu);
+    }, 100);
 }
 
 function handleMenuItemClick(id) {
     const item = contextMenuTemplate.buildings[id] || contextMenuTemplate.units[id];
-    if (item && GameState.hasEnoughResources(item.cost)) {
+    if (!item) {
+        console.error(`Неизвестный ID: ${id}`);
+        return;
+    }
+    
+    if (GameState.hasEnoughResources(item.cost)) {
         GameState.deductResources(item.cost);
+        console.log(`Создаю: ${item.name}`);
         // Здесь будет создание выбранного юнита или здания
+    } else {
+        console.log('Недостаточно ресурсов');
     }
 } 

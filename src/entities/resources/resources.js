@@ -1,5 +1,5 @@
 // resources.js
-import { game } from '../core/game.js';
+import { game } from '../../engine/game.js';
 import { BaseEntity } from '../base-entity.js';
 
 const tileSize = 32;

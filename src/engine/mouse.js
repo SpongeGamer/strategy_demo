@@ -1,5 +1,5 @@
 import { game } from './game.js';
-import { maps } from './maps.js';
+import { Maps, TILE_SIZE } from './maps.js';
 
 export const Mouse = {
     x: 0,
@@ -12,8 +12,15 @@ export const Mouse = {
     dragEndX: 0,
     dragEndY: 0,
     selectedArea: null,
+    initialized: false, // Флаг инициализации
     
     init() {
+        // Проверяем, не инициализированы ли уже обработчики
+        if (this.initialized) {
+            console.log('Обработчики мыши уже инициализированы');
+            return;
+        }
+        
         console.log('Инициализация обработчиков мыши...');
         
         // Обработка движения мыши
@@ -30,6 +37,20 @@ export const Mouse = {
         
         // Обработка нажатия кнопки мыши
         document.addEventListener('mousedown', (e) => {
+            console.log('Mouse down:', e.button, e.target.tagName, e.target.id, e.target.className);
+            
+            // Проверяем, не является ли цель кликом по интерфейсу
+            if (this.isInterfaceElement(e.target)) {
+                console.log('Клик по интерфейсу, игнорируем');
+                return;
+            }
+            
+            // Проверяем, находимся ли мы в игре или в главном меню
+            if (!this.isInGame()) {
+                console.log('Клик в главном меню, игнорируем выделение области');
+                return;
+            }
+            
             if (e.button === 0) {
                 // Левая кнопка мыши
                 this.leftButtonDown = true;
@@ -45,6 +66,20 @@ export const Mouse = {
         
         // Обработка отпускания кнопки мыши
         document.addEventListener('mouseup', (e) => {
+            console.log('Mouse up:', e.button, e.target.tagName, e.target.id, e.target.className);
+            
+            // Проверяем, не является ли цель кликом по интерфейсу
+            if (this.isInterfaceElement(e.target)) {
+                console.log('Отпускание кнопки на интерфейсе, игнорируем');
+                return;
+            }
+            
+            // Проверяем, находимся ли мы в игре или в главном меню
+            if (!this.isInGame()) {
+                console.log('Отпускание кнопки в главном меню, игнорируем выделение области');
+                return;
+            }
+            
             if (e.button === 0) {
                 // Левая кнопка мыши
                 this.leftButtonDown = false;
@@ -78,7 +113,43 @@ export const Mouse = {
             e.preventDefault();
         });
         
+        this.initialized = true;
         console.log('Обработчики мыши инициализированы');
+    },
+    
+    // Проверяет, находимся ли мы в игре
+    isInGame() {
+        // Проверяем, отображается ли игровой интерфейс
+        const gameInterface = document.getElementById('gameinterfacescreen');
+        if (!gameInterface) return false;
+        
+        // Проверяем, скрыт ли стартовый экран
+        const startScreen = document.getElementById('gamestartscreen');
+        if (!startScreen) return false;
+        
+        return gameInterface.style.display === 'block' && startScreen.style.display === 'none';
+    },
+    
+    // Проверяет, является ли элемент частью интерфейса
+    isInterfaceElement(element) {
+        // Проверяем, является ли элемент или его родители частью интерфейса
+        let current = element;
+        while (current) {
+            // Проверяем ID и классы элемента
+            if (current.id === 'command-panel' || 
+                current.id === 'context-menu' || 
+                current.id === 'resources' ||
+                current.id === 'sidebarbuttons' ||
+                current.classList.contains('command-button') ||
+                current.classList.contains('context-menu-item')) {
+                return true;
+            }
+            
+            // Переходим к родительскому элементу
+            current = current.parentElement;
+        }
+        
+        return false;
     },
     
     createSelectedArea() {

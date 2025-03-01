@@ -19,6 +19,72 @@
     --gradient-overlay: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
 }
 
+/* Общие стили */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* Стили для экранов */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Стартовый экран */
+#startscreen {
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../assets/background.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+.title {
+    font-size: 48px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+    margin-bottom: 50px;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.menu-button {
+    padding: 15px 40px;
+    font-size: 18px;
+    background: linear-gradient(to right, #004080, #0080ff);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    text-align: center;
+}
+
+.menu-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 128, 255, 0.7);
+}
+
+/* Игровой интерфейс */
+#gameinterfacescreen {
+    background-color: #333;
+}
+
 /* Базовые стили */
 body {
     margin: 0;
@@ -49,11 +115,15 @@ body {
 }
 
 .icon {
-    width: var(--icon-size);
-    height: var(--icon-size);
-    border-radius: 6px;
-    position: relative;
-    overflow: hidden;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    margin-right: var(--spacing-sm);
 }
 
 .icon::after {
@@ -74,23 +144,6 @@ body {
     width: 100%;
     height: 100%;
     position: relative;
-}
-
-/* Стартовый экран */
-#gamestartscreen {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: var(--bg-dark);
-    gap: var(--spacing-lg);
-}
-
-#gamestartscreen h1 {
-    font-size: 48px;
-    color: var(--primary-color);
-    text-shadow: var(--shadow-glow);
-    margin-bottom: 40px;
 }
 
 /* Ресурсы */
@@ -117,68 +170,346 @@ body {
 /* Контекстное меню */
 #context-menu {
     position: absolute;
-    background: rgba(0, 10, 20, 0.95);
-    border: 1px solid var(--primary-color);
-    box-shadow: var(--shadow-glow);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-sm);
-    backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 5px;
     z-index: 1000;
+    display: none;
+    min-width: 200px;
+}
+
+.context-menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
 }
 
 .context-menu-item {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
-    color: var(--text-light);
+    padding: 5px;
+    color: white;
     cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 .context-menu-item:hover {
-    background: rgba(74, 158, 255, 0.15);
-    transform: translateX(4px);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Панель команд */
-#command-panel {
+.context-menu-item .icon {
+    margin-right: 10px;
+    font-size: 20px;
+}
+
+.context-menu-item .info {
+    flex-grow: 1;
+}
+
+.context-menu-item .name {
+    font-weight: bold;
+}
+
+.context-menu-item .description {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.context-menu-item .cost {
+    font-size: 12px;
+    color: #ffcc00;
+}
+
+/* Стили для панели ресурсов */
+.resource-panel {
     position: absolute;
-    bottom: 218px;
-    right: -20px;
+    top: 10px;
+    left: 10px;
     display: flex;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
-    background: rgba(0, 10, 20, 0.95);
-    border: 1px solid var(--primary-color);
-    border-radius: var(--border-radius);
-    transform: scale(0.8);
+    gap: 15px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.resource-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.metal-icon::before {
+    content: '🔧';
+}
+
+.gold-icon::before {
+    content: '💰';
+}
+
+.energy-icon::before {
+    content: '⚡';
+}
+
+.resource-amount {
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Стили для мини-карты */
+#minimap {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 150px;
+    height: 150px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #444;
+    z-index: 100;
+}
+
+#minimapcanvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Стили для панели команд */
+.command-panel {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
 }
 
 .command-button {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(to bottom, #1a2a3a, #0a1a2a);
-    border: 1px solid var(--primary-color);
-    border-radius: 6px;
+    width: 60px;
+    height: 60px;
+    background-color: #333;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
+    transition: background-color 0.2s;
 }
 
-/* Анимации */
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.7; }
-    100% { transform: scale(1); opacity: 1; }
+.command-button:hover {
+    background-color: #555;
 }
 
-@keyframes glow {
-    from { box-shadow: 0 0 5px var(--primary-color),
-                      0 0 10px var(--primary-color),
-                      0 0 15px var(--primary-color); }
-    to { box-shadow: 0 0 10px var(--primary-color),
-                    0 0 20px var(--primary-color),
-                    0 0 30px var(--primary-color); }
+.command-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.buildings-icon::before {
+    content: '🏢';
+}
+
+.defenses-icon::before {
+    content: '🛡️';
+}
+
+.infantry-icon::before {
+    content: '👤';
+}
+
+.vehicles-icon::before {
+    content: '🚗';
+}
+
+.aircraft-icon::before {
+    content: '✈️';
+}
+
+.command-label {
+    color: white;
+    font-size: 10px;
+    text-align: center;
+}
+
+/* Стили для призрака здания */
+.building-ghost {
+    position: absolute;
+    background-color: rgba(0, 255, 0, 0.3);
+    border: 2px solid rgba(0, 255, 0, 0.7);
+    z-index: 50;
+    pointer-events: none;
+}
+
+/* Стили для зданий */
+.building {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    z-index: 20;
+    cursor: pointer;
+}
+
+.building-power-plant {
+    background-image: url('../assets/buildings/power-plant.png');
+}
+
+.building-barracks {
+    background-image: url('../assets/buildings/barracks.png');
+}
+
+.building-factory {
+    background-image: url('../assets/buildings/factory.png');
+}
+
+/* Стили для выбранных объектов */
+.selected {
+    outline: 2px solid #00ff00;
+    outline-offset: 2px;
+}
+
+/* Стили для информации о выбранном объекте */
+#selected-info {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    z-index: 100;
+    display: none;
+    min-width: 200px;
+}
+
+#selected-info.visible {
+    display: block;
+}
+
+#selected-info .title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+#selected-info .stats {
+    margin-bottom: 5px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #333;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #00ff00;
+    transition: width 0.3s;
+}
+
+/* Стили для всплывающих сообщений */
+.floating-message {
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black;
+    z-index: 200;
+    pointer-events: none;
+    animation: float-up 2s forwards;
+}
+
+@keyframes float-up {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+}
+
+/* Стили для тайлов карты */
+.tile {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    background-size: cover;
+}
+
+.tile-grass {
+    background-image: url('../assets/tiles/grass.png');
+}
+
+.tile-water {
+    background-image: url('../assets/tiles/water.png');
+}
+
+.tile-mountain {
+    background-image: url('../assets/tiles/mountain.png');
+}
+
+.tile-forest {
+    background-image: url('../assets/tiles/forest.png');
+}
+
+/* Стили для ресурсов */
+.resource {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    z-index: 5;
+    cursor: pointer;
+}
+
+.resource-metal {
+    background-image: url('../assets/resources/metal.png');
+}
+
+.resource-gold {
+    background-image: url('../assets/resources/gold.png');
+}
+
+.gamecanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#gamebackgroundcanvas {
+    z-index: 1;
+}
+
+#gameforegroundcanvas {
+    z-index: 2;
 } 

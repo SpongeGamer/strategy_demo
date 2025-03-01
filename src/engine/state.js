@@ -2,8 +2,9 @@ export const GameState = {
     currentMode: null,
     resources: {
         wood: 50,
-        metal: 50,
-        gold: 20
+        metal: 100,
+        gold: 50,
+        energy: 0
     },
     entities: [],
     selectedEntity: null,
@@ -21,21 +22,26 @@ export const GameState = {
         return false;
     },
 
-    hasEnoughResources(costs) {
-        return Object.entries(costs).every(([type, amount]) => 
-            this.resources[type] >= amount
-        );
+    hasEnoughResources(cost) {
+        if (!cost) return true;
+        
+        for (const resource in cost) {
+            if (this.resources[resource] < cost[resource]) {
+                return false;
+            }
+        }
+        
+        return true;
     },
 
-    deductResources(costs) {
-        if (this.hasEnoughResources(costs)) {
-            Object.entries(costs).forEach(([type, amount]) => {
-                this.resources[type] -= amount;
-            });
-            this.updateUI();
-            return true;
+    deductResources(cost) {
+        if (!cost) return;
+        
+        for (const resource in cost) {
+            this.resources[resource] -= cost[resource];
         }
-        return false;
+        
+        this.updateUI();
     },
 
     addEntity(entity) {
@@ -63,8 +69,53 @@ export const GameState = {
     },
 
     updateUI() {
-        document.getElementById('trees-count').textContent = this.resources.wood;
-        document.getElementById('metal-count').textContent = this.resources.metal;
-        document.getElementById('gold-count').textContent = this.resources.gold;
+        try {
+            // Обновляем отображение ресурсов
+            const metalElement = document.getElementById('metal-amount');
+            const goldElement = document.getElementById('gold-amount');
+            const energyElement = document.getElementById('energy-amount');
+            
+            if (metalElement) metalElement.textContent = this.resources.metal;
+            if (goldElement) goldElement.textContent = this.resources.gold;
+            if (energyElement) energyElement.textContent = this.resources.energy;
+            
+            console.log('Обновлены ресурсы:', this.resources);
+        } catch (error) {
+            console.error('Ошибка при обновлении UI:', error);
+        }
+    },
+
+    addResources(resources) {
+        if (!resources) return;
+        
+        for (const resource in resources) {
+            this.resources[resource] += resources[resource];
+        }
+        
+        this.updateUI();
+    },
+
+    updateResourceDisplay() {
+        const metalElement = document.getElementById('metal-amount');
+        const goldElement = document.getElementById('gold-amount');
+        const energyElement = document.getElementById('energy-amount');
+        
+        if (metalElement) metalElement.textContent = this.resources.metal;
+        if (goldElement) goldElement.textContent = this.resources.gold;
+        if (energyElement) energyElement.textContent = this.resources.energy;
+    },
+
+    reset() {
+        this.resources = {
+            wood: 50,
+            metal: 100,
+            gold: 50,
+            energy: 0
+        };
+        
+        this.selectedEntity = null;
+        this.entities = [];
+        
+        this.updateUI();
     }
 }; 
