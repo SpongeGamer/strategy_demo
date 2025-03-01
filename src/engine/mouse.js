@@ -1,63 +1,147 @@
 import { game } from './game.js';
 import { maps } from './maps.js';
 
-export let mouse = {
+export const Mouse = {
     x: 0,
     y: 0,
-    gridX: 0,
-    gridY: 0,
-    buttonPressed: false,
-    dragSelect: false,
-    dragX: 0,
-    dragY: 0,
-
-    init: function() {
-        let canvas = document.getElementById('gameforegroundcanvas');
+    leftButtonDown: false,
+    rightButtonDown: false,
+    isDragging: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    dragEndX: 0,
+    dragEndY: 0,
+    selectedArea: null,
+    
+    init() {
+        console.log('Инициализация обработчиков мыши...');
         
-        canvas.addEventListener('mousemove', mouse.mouseMove, false);
-        canvas.addEventListener('mousedown', mouse.mouseDown, false);
-        canvas.addEventListener('mouseup', mouse.mouseUp, false);
+        // Обработка движения мыши
+        document.addEventListener('mousemove', (e) => {
+            this.x = e.clientX;
+            this.y = e.clientY;
+            
+            if (this.isDragging) {
+                this.dragEndX = this.x;
+                this.dragEndY = this.y;
+                this.updateSelectedArea();
+            }
+        });
         
-        // Предотвращаем контекстное меню при правом клике
-        canvas.addEventListener('contextmenu', (e) => e.preventDefault(), false);
+        // Обработка нажатия кнопки мыши
+        document.addEventListener('mousedown', (e) => {
+            if (e.button === 0) {
+                // Левая кнопка мыши
+                this.leftButtonDown = true;
+                this.dragStartX = this.x;
+                this.dragStartY = this.y;
+                this.isDragging = true;
+                this.createSelectedArea();
+            } else if (e.button === 2) {
+                // Правая кнопка мыши
+                this.rightButtonDown = true;
+            }
+        });
+        
+        // Обработка отпускания кнопки мыши
+        document.addEventListener('mouseup', (e) => {
+            if (e.button === 0) {
+                // Левая кнопка мыши
+                this.leftButtonDown = false;
+                
+                if (this.isDragging) {
+                    this.isDragging = false;
+                    this.removeSelectedArea();
+                    
+                    // Определяем, было ли это кликом или выделением области
+                    const isDragSelection = 
+                        Math.abs(this.dragStartX - this.dragEndX) > 5 || 
+                        Math.abs(this.dragStartY - this.dragEndY) > 5;
+                    
+                    if (isDragSelection) {
+                        // Действие при выделении области
+                        this.handleAreaSelection();
+                    } else {
+                        // Действие при клике
+                        this.handleClick(this.x, this.y);
+                    }
+                }
+            } else if (e.button === 2) {
+                // Правая кнопка мыши
+                this.rightButtonDown = false;
+                this.handleRightClick(this.x, this.y);
+            }
+        });
+        
+        // Отключение контекстного меню по правой кнопке
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+        
+        console.log('Обработчики мыши инициализированы');
     },
-
-    mouseMove: function(ev) {
-        let offset = game.foregroundCanvas.getBoundingClientRect();
-        mouse.x = ev.pageX - offset.left;
-        mouse.y = ev.pageY - offset.top;
-
-        mouse.gridX = Math.floor((mouse.x - game.camera.x) / maps.tileSize);
-        mouse.gridY = Math.floor((mouse.y - game.camera.y) / maps.tileSize);
-
-        if (mouse.buttonPressed) {
-            mouse.dragX = mouse.x;
-            mouse.dragY = mouse.y;
-            mouse.dragSelect = true;
+    
+    createSelectedArea() {
+        if (!this.selectedArea) {
+            this.selectedArea = document.createElement('div');
+            this.selectedArea.className = 'selection-area';
+            document.body.appendChild(this.selectedArea);
+        }
+        
+        this.updateSelectedArea();
+    },
+    
+    updateSelectedArea() {
+        if (!this.selectedArea) return;
+        
+        const left = Math.min(this.dragStartX, this.dragEndX);
+        const top = Math.min(this.dragStartY, this.dragEndY);
+        const width = Math.abs(this.dragEndX - this.dragStartX);
+        const height = Math.abs(this.dragEndY - this.dragStartY);
+        
+        this.selectedArea.style.left = `${left}px`;
+        this.selectedArea.style.top = `${top}px`;
+        this.selectedArea.style.width = `${width}px`;
+        this.selectedArea.style.height = `${height}px`;
+    },
+    
+    removeSelectedArea() {
+        if (this.selectedArea) {
+            this.selectedArea.remove();
+            this.selectedArea = null;
         }
     },
-
-    mouseDown: function(ev) {
-        mouse.buttonPressed = true;
-        mouse.dragX = mouse.x;
-        mouse.dragY = mouse.y;
+    
+    handleAreaSelection() {
+        console.log(`Выделена область: (${this.dragStartX}, ${this.dragStartY}) - (${this.dragEndX}, ${this.dragEndY})`);
+        
+        // Здесь будет логика выделения юнитов в заданной области
+        // Код зависит от конкретной реализации игры
     },
-
-    mouseUp: function(ev) {
-        mouse.buttonPressed = false;
-        mouse.dragSelect = false;
+    
+    handleClick(x, y) {
+        console.log(`Клик мышью в точке (${x}, ${y})`);
+        
+        // Здесь будет логика обработки клика мышью
+        // Например, выделение юнита или здания
     },
-
-    // Нарисовать область выделения
-    draw: function() {
-        if (mouse.dragSelect) {
-            let x = Math.min(mouse.x, mouse.dragX);
-            let y = Math.min(mouse.y, mouse.dragY);
-            let width = Math.abs(mouse.x - mouse.dragX);
-            let height = Math.abs(mouse.y - mouse.dragY);
-
-            game.foregroundContext.strokeStyle = 'white';
-            game.foregroundContext.strokeRect(x, y, width, height);
-        }
+    
+    handleRightClick(x, y) {
+        console.log(`Правый клик мышью в точке (${x}, ${y})`);
+        
+        // Здесь будет логика обработки правого клика мышью
+        // Например, отправка приказа выбранным юнитам
+    },
+    
+    isOverElement(element) {
+        if (!element) return false;
+        
+        const rect = element.getBoundingClientRect();
+        return (
+            this.x >= rect.left &&
+            this.x <= rect.right &&
+            this.y >= rect.top &&
+            this.y <= rect.bottom
+        );
     }
 }; 
