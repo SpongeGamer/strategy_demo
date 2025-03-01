@@ -1,0 +1,184 @@
+:root {
+    /* Цвета */
+    --primary-color: #4a9eff;
+    --secondary-color: #2980b9;
+    --bg-dark: rgba(0, 0, 0, 0.7);
+    --text-light: #fff;
+    --text-gray: #aaa;
+    
+    /* Размеры */
+    --spacing-sm: 8px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    --border-radius: 8px;
+    --icon-size: 32px;
+    
+    /* Эффекты */
+    --shadow-glow: 0 0 10px rgba(74, 158, 255, 0.5);
+    --gradient-primary: linear-gradient(to bottom, var(--primary-color) 0%, var(--secondary-color) 100%);
+    --gradient-overlay: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
+}
+
+/* Базовые стили */
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #1a1a1a;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: var(--text-light);
+}
+
+/* Общие компоненты */
+.btn {
+    padding: var(--spacing-md) 40px;
+    background: var(--gradient-primary);
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+.btn:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-glow);
+}
+
+.icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-overlay);
+}
+
+/* Игровые слои */
+.gamelayer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#gamecontainer {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Стартовый экран */
+#gamestartscreen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-dark);
+    gap: var(--spacing-lg);
+}
+
+#gamestartscreen h1 {
+    font-size: 48px;
+    color: var(--primary-color);
+    text-shadow: var(--shadow-glow);
+    margin-bottom: 40px;
+}
+
+/* Ресурсы */
+#resources {
+    position: absolute;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--bg-dark);
+    border-radius: var(--border-radius);
+    display: flex;
+    gap: var(--spacing-lg);
+}
+
+.resource {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 16px;
+    color: var(--text-light);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Контекстное меню */
+#context-menu {
+    position: absolute;
+    background: rgba(0, 10, 20, 0.95);
+    border: 1px solid var(--primary-color);
+    box-shadow: var(--shadow-glow);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.context-menu-item:hover {
+    background: rgba(74, 158, 255, 0.15);
+    transform: translateX(4px);
+}
+
+/* Панель команд */
+#command-panel {
+    position: absolute;
+    bottom: 218px;
+    right: -20px;
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: rgba(0, 10, 20, 0.95);
+    border: 1px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    transform: scale(0.8);
+}
+
+.command-button {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(to bottom, #1a2a3a, #0a1a2a);
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* Анимации */
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 5px var(--primary-color),
+                      0 0 10px var(--primary-color),
+                      0 0 15px var(--primary-color); }
+    to { box-shadow: 0 0 10px var(--primary-color),
+                    0 0 20px var(--primary-color),
+                    0 0 30px var(--primary-color); }
+} 

@@ -6,32 +6,32 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         
         <!-- Базовые модули -->
-        <script src="js/core/loader.js" type="module"></script>
-        <script src="js/core/mouse.js" type="module"></script>
-        <script src="js/core/maps.js" type="module"></script>
-        <script src="js/core/game.js" type="module"></script>
+        <script src="src/engine/loader.js" type="module"></script>
+        <script src="src/engine/mouse.js" type="module"></script>
+        <script src="src/engine/maps.js" type="module"></script>
+        <script src="src/engine/game.js" type="module"></script>
         
         <!-- Игровые сущности -->
-        <script src="js/entities/buildings.js" type="module"></script>
-        <script src="js/entities/units.js" type="module"></script>
-        <script src="js/entities/vehicles.js" type="module"></script>
-        <script src="js/entities/aircraft.js" type="module"></script>
-        <script src="js/entities/resources.js" type="module"></script>
+        <script src="src/entities/buildings/buildings.js" type="module"></script>
+        <script src="src/entities/units/units.js" type="module"></script>
+        <script src="src/entities/vehicles/vehicles.js" type="module"></script>
+        <script src="src/entities/aircraft/aircraft.js" type="module"></script>
+        <script src="src/entities/resources/resources.js" type="module"></script>
         
         <!-- Вспомогательные модули -->
-        <script src="js/utils/pathfinding-browser.min.js"></script>
-        <script src="js/utils/astar.js" type="module"></script>
-        <script src="js/utils/fog.js" type="module"></script>
-        <script src="js/ui/sidebar.js" type="module"></script>
-        <script src="js/ui/interface.js" type="module"></script>
+        <script src="src/utils/pathfinding-browser.min.js"></script>
+        <script src="src/utils/astar.js" type="module"></script>
+        <script src="src/utils/fog.js" type="module"></script>
+        <script src="src/ui/sidebar.js" type="module"></script>
+        <script src="src/ui/interface.js" type="module"></script>
         
         <!-- Игровые режимы -->
-        <script src="js/modes/singleplayer.js" type="module"></script>
+        <script src="src/game-modes/singleplayer.js" type="module"></script>
         
         <!-- Основной игровой модуль -->
         <script type="module">
-            import { game } from './js/core/game.js';
-            import { singleplayer } from './js/modes/singleplayer.js';
+            import { game } from './src/engine/game.js';
+            import { singleplayer } from './src/game-modes/singleplayer.js';
             
             window.addEventListener('load', () => {
                 game.init();
@@ -43,7 +43,7 @@
             });
         </script>
 
-        <link rel="stylesheet" href="css/styles.css" type="text/css" media="screen" charset="utf-8">
+        <link rel="stylesheet" href="src/css/styles.css" type="text/css" media="screen" charset="utf-8">
     </head>
     <body>
         <div id="gamecontainer">
