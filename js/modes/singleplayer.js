@@ -1,5 +1,5 @@
-import { game } from './game.js';
-import { loader } from './common.js';
+import { game } from '../core/game.js';
+import { loader } from '../core/loader.js';
 
 export let singleplayer = {
     // Начало одиночной игры

@@ -1,10 +1,11 @@
 // Импорты
-import { loader } from './common.js';
+import { loader } from './loader.js';
 import { mouse } from './mouse.js';
 import { maps } from './maps.js';
-import { buildings } from './buildings.js';
-import { vehicles } from './vehicles.js';
-import { aircraft } from './aircraft.js';
+import { buildings } from '../entities/buildings.js';
+import { vehicles } from '../entities/vehicles.js';
+import { aircraft } from '../entities/aircraft.js';
+import { resources } from '../entities/resources.js';
 
 // Экспортируемые переменные
 export let game = {

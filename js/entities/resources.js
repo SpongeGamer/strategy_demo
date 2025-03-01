@@ -1,5 +1,9 @@
 // resources.js
-import { wood, metal, gold, tileSize, mapWidth, mapHeight, units } from './game.js';
+import { game } from '../core/game.js';
+
+const tileSize = 32;
+const mapWidth = 100;
+const mapHeight = 100;
 
 const resourceColors = {
     wood: '#8B4513',
@@ -14,6 +18,45 @@ const resourceIcons = {
 };
 
 const resourceNodes = [];
+
+export let resources = {
+    wood: 0,
+    metal: 0,
+    gold: 0,
+    
+    init: function() {
+        this.wood = 50;
+        this.metal = 50;
+        this.gold = 20;
+        this.updateDisplay();
+    },
+    
+    updateDisplay: function() {
+        document.getElementById('trees-count').textContent = this.wood;
+        document.getElementById('metal-count').textContent = this.metal;
+        document.getElementById('gold-count').textContent = this.gold;
+    },
+    
+    add: function(type, amount) {
+        if (this[type] !== undefined) {
+            this[type] += amount;
+            this.updateDisplay();
+        }
+    },
+    
+    remove: function(type, amount) {
+        if (this[type] !== undefined) {
+            this[type] = Math.max(0, this[type] - amount);
+            this.updateDisplay();
+            return this[type] >= 0;
+        }
+        return false;
+    },
+    
+    hasEnough: function(type, amount) {
+        return this[type] !== undefined && this[type] >= amount;
+    }
+};
 
 export function initializeResources(grid) {
     console.log('Инициализация ресурсов...');
@@ -172,9 +215,9 @@ function getGatherAmount(type) {
 
 function addResources(type, amount) {
     switch (type) {
-        case 'wood': wood += amount; break;
-        case 'metal': metal += amount; break;
-        case 'gold': gold += amount; break;
+        case 'wood': resources.wood += amount; break;
+        case 'metal': resources.metal += amount; break;
+        case 'gold': resources.gold += amount; break;
     }
 }
 
@@ -217,9 +260,9 @@ function removeResourceNode(node) {
 }
 
 export function updateResourceDisplay() {
-    document.getElementById('wood-amount').textContent = wood;
-    document.getElementById('metal-amount').textContent = metal;
-    document.getElementById('gold-amount').textContent = gold;
+    document.getElementById('wood-amount').textContent = resources.wood;
+    document.getElementById('metal-amount').textContent = resources.metal;
+    document.getElementById('gold-amount').textContent = resources.gold;
     
     updateBuildButtons();
 }
@@ -243,9 +286,9 @@ export function updateBuildButtons() {
 }
 
 function canAfford(cost) {
-    return (!cost.wood || wood >= cost.wood) &&
-           (!cost.metal || metal >= cost.metal) &&
-           (!cost.gold || gold >= cost.gold);
+    return (!cost.wood || resources.wood >= cost.wood) &&
+           (!cost.metal || resources.metal >= cost.metal) &&
+           (!cost.gold || resources.gold >= cost.gold);
 }
 
 function isValidResourcePosition(x, y, grid) {
