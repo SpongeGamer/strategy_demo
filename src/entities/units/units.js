@@ -1,6 +1,46 @@
 // units.js
 import { unitStats, units, game, mapWidth, tileSize, weather } from './game.js';
 import { attackBuilding } from './buildings.js';
+import { BaseEntity } from '../base-entity.js';
+
+export class Unit extends BaseEntity {
+    constructor(x, y, type) {
+        super(x, y, type, '#2ecc71');
+        this.speed = 2;
+        this.targetX = x;
+        this.targetY = y;
+    }
+}
+
+export const units = {
+    types: {
+        worker: {
+            name: 'Worker',
+            cost: { metal: 50, gold: 25 },
+            buildTime: 10,
+            hp: 100,
+            speed: 2
+        },
+        soldier: {
+            name: 'Soldier',
+            cost: { metal: 100, gold: 50 },
+            buildTime: 15,
+            hp: 200,
+            speed: 1.5
+        },
+        engineer: {
+            name: 'Engineer',
+            cost: { metal: 75, gold: 50 },
+            buildTime: 12,
+            hp: 150,
+            speed: 1.8
+        }
+    },
+    
+    create(type, x, y) {
+        return new Unit(x, y, type);
+    }
+};
 
 export function initializeUnits(ctx, unitsArray, stats) {
     console.log('Инициализация юнитов...');

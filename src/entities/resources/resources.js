@@ -1,5 +1,6 @@
 // resources.js
 import { game } from '../core/game.js';
+import { BaseEntity } from '../base-entity.js';
 
 const tileSize = 32;
 const mapWidth = 100;
@@ -19,7 +20,37 @@ const resourceIcons = {
 
 const resourceNodes = [];
 
-export let resources = {
+export class Resource extends BaseEntity {
+    constructor(x, y, type, amount) {
+        super(x, y, type, '#f1c40f');
+        this.amount = amount;
+        this.maxAmount = amount;
+    }
+}
+
+export const resources = {
+    types: {
+        trees: {
+            name: 'Trees',
+            harvestRate: 1,
+            harvestAmount: 10
+        },
+        metal: {
+            name: 'Metal',
+            harvestRate: 0.8,
+            harvestAmount: 15
+        },
+        gold: {
+            name: 'Gold',
+            harvestRate: 0.5,
+            harvestAmount: 5
+        }
+    },
+    
+    create(type, x, y, amount) {
+        return new Resource(x, y, type, amount);
+    },
+    
     wood: 0,
     metal: 0,
     gold: 0,

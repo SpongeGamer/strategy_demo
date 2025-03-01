@@ -1,63 +1,107 @@
-export let loader = {
-    loaded: false,
-    loadedCount: 0, // Количество загруженных файлов
-    totalCount: 0, // Общее количество файлов для загрузки
-    
-    init: function() {
-        // Проверяем поддержку звуковых форматов
-        var mp3Support, oggSupport;
-        var audio = document.createElement('audio');
-        if (audio.canPlayType) {
-            // Проверяем поддержку MP3
-            mp3Support = "" != audio.canPlayType('audio/mpeg');
-            // Проверяем поддержку OGG
-            oggSupport = "" != audio.canPlayType('audio/ogg; codecs="vorbis"');
-        }
+export class ResourceLoader {
+    constructor() {
+        this.images = {};
+        this.sounds = {};
+        this.totalResources = 0;
+        this.loadedResources = 0;
+        this.onProgress = null;
+        this.onComplete = null;
+    }
 
-        // Устанавливаем расширение аудио файлов в зависимости от поддержки браузера
-        loader.soundFileExtn = oggSupport ? ".ogg" : mp3Support ? ".mp3" : undefined;
-    },
-    
-    loadImage: function(url) {
-        this.totalCount++;
+    loadImage(name, src) {
+        this.totalResources++;
         
-        var image = new Image();
-        image.addEventListener("load", loader.itemLoaded, false);
-        image.src = url;
-        return image;
-    },
-    
-    soundFileExtn: ".ogg",
-    
-    loadSound: function(url) {
-        this.totalCount++;
-
-        var audio = new Audio();
-        audio.addEventListener("canplaythrough", loader.itemLoaded, false);
-        audio.src = url + loader.soundFileExtn;
-        return audio;
-    },
-    
-    itemLoaded: function(ev) {
-        // Увеличиваем счетчик загруженных элементов
-        loader.loadedCount++;
-
-        // Обновляем индикатор загрузки
-        var loadingPercentage = Math.floor(loader.loadedCount/loader.totalCount * 100);
-        document.getElementById('loadingmessage').innerHTML = 'Loaded ' + loadingPercentage + '%';
-
-        // Если все элементы загружены, скрываем экран загрузки
-        if (loader.loadedCount === loader.totalCount) {
-            loader.loaded = true;
+        return new Promise((resolve, reject) => {
+            const img = new Image();
             
-            // Скрываем экран загрузки
-            document.getElementById('loadingscreen').style.display = 'none';
+            img.onload = () => {
+                this.images[name] = img;
+                this.loadedResources++;
+                this.updateProgress();
+                resolve(img);
+            };
+            
+            img.onerror = () => {
+                console.error(`Ошибка загрузки изображения: ${src}`);
+                reject(new Error(`Не удалось загрузить изображение: ${src}`));
+            };
+            
+            img.src = src;
+        });
+    }
 
-            // Удаляем прослушиватели событий загрузки
-            if (loader.onload) {
-                loader.onload();
-                loader.onload = undefined;
+    loadSound(name, src) {
+        this.totalResources++;
+        
+        return new Promise((resolve, reject) => {
+            const audio = new Audio();
+            
+            audio.oncanplaythrough = () => {
+                this.sounds[name] = audio;
+                this.loadedResources++;
+                this.updateProgress();
+                resolve(audio);
+            };
+            
+            audio.onerror = () => {
+                console.error(`Ошибка загрузки звука: ${src}`);
+                reject(new Error(`Не удалось загрузить звук: ${src}`));
+            };
+            
+            audio.src = src;
+        });
+    }
+
+    async loadAll(resources) {
+        const promises = [];
+        
+        // Загрузка изображений
+        if (resources.images) {
+            for (const [name, src] of Object.entries(resources.images)) {
+                promises.push(this.loadImage(name, src));
             }
         }
+        
+        // Загрузка звуков
+        if (resources.sounds) {
+            for (const [name, src] of Object.entries(resources.sounds)) {
+                promises.push(this.loadSound(name, src));
+            }
+        }
+        
+        try {
+            await Promise.all(promises);
+            if (this.onComplete) {
+                this.onComplete();
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке ресурсов:', error);
+            throw error;
+        }
     }
-}; 
+
+    updateProgress() {
+        const progress = (this.loadedResources / this.totalResources) * 100;
+        if (this.onProgress) {
+            this.onProgress(progress);
+        }
+    }
+
+    getImage(name) {
+        return this.images[name];
+    }
+
+    getSound(name) {
+        return this.sounds[name];
+    }
+
+    setProgressCallback(callback) {
+        this.onProgress = callback;
+    }
+
+    setCompleteCallback(callback) {
+        this.onComplete = callback;
+    }
+}
+
+export const loader = new ResourceLoader(); 

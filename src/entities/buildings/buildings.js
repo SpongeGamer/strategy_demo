@@ -1,20 +1,40 @@
 // buildings.js
+import { BaseEntity } from '../base-entity.js';
+
 const tileSize = 32; // Определяем размер тайла локально
 
-export let buildings = {
+export class Building extends BaseEntity {
+    constructor(x, y, type) {
+        super(x, y, type, '#4a9eff');
+        this.constructionProgress = 0;
+        this.isConstructing = true;
+    }
+}
+
+export const buildings = {
     types: {
-        "starport": {
-            name: "Starport",
-            cost: 200,
-            hitpoints: 1000,
-            size: 2
+        commandCenter: {
+            name: 'Command Center',
+            cost: { metal: 200, gold: 100 },
+            buildTime: 30,
+            hp: 1000
         },
-        "turret": {
-            name: "Turret",
-            cost: 150,
-            hitpoints: 500,
-            size: 2
+        barracks: {
+            name: 'Barracks',
+            cost: { metal: 150, gold: 50 },
+            buildTime: 20,
+            hp: 800
+        },
+        factory: {
+            name: 'Factory',
+            cost: { metal: 300, gold: 150 },
+            buildTime: 40,
+            hp: 1200
         }
+    },
+    
+    create(type, x, y) {
+        return new Building(x, y, type);
     }
 };
 

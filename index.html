@@ -10,8 +10,10 @@
         <script src="./src/engine/mouse.js" type="module"></script>
         <script src="./src/engine/maps.js" type="module"></script>
         <script src="./src/engine/game.js" type="module"></script>
+        <script src="./src/engine/state.js" type="module"></script>
         
         <!-- Игровые сущности -->
+        <script src="./src/entities/base-entity.js" type="module"></script>
         <script src="./src/entities/buildings/buildings.js" type="module"></script>
         <script src="./src/entities/units/units.js" type="module"></script>
         <script src="./src/entities/vehicles/vehicles.js" type="module"></script>
@@ -36,22 +38,47 @@
             import { initInterface } from './src/ui/interface.js';
             import { initMinimap } from './src/ui/minimap.js';
             import { initSidebar } from './src/ui/sidebar.js';
+            import { GameState } from './src/engine/state.js';
             
             window.addEventListener('load', () => {
-                console.log('Страница загружена');
-                game.init();
-                console.log('Игра инициализирована');
-                initInterface();
-                console.log('Интерфейс инициализирован');
-                initMinimap();
-                console.log('Миникарта инициализирована');
-                initSidebar();
-                console.log('Боковая панель инициализирована');
-                
-                document.getElementById('singleplayer').addEventListener('click', () => {
-                    console.log('Нажата кнопка Campaign');
-                    singleplayer.start();
-                });
+                try {
+                    console.log('Страница загружена, начинаем инициализацию...');
+                    
+                    // Инициализация состояния
+                    GameState.init();
+                    console.log('GameState инициализирован');
+                    
+                    // Инициализация игры
+                    game.init();
+                    console.log('Игра инициализирована');
+                    
+                    // Инициализация интерфейса
+                    initInterface();
+                    console.log('Интерфейс инициализирован');
+                    
+                    // Инициализация миникарты
+                    initMinimap();
+                    console.log('Миникарта инициализирована');
+                    
+                    // Инициализация боковой панели
+                    initSidebar();
+                    console.log('Боковая панель инициализирована');
+                    
+                    // Добавляем обработчики событий
+                    document.getElementById('singleplayer').addEventListener('click', () => {
+                        console.log('Нажата кнопка Campaign');
+                        try {
+                            singleplayer.start();
+                            console.log('Режим одиночной игры запущен');
+                        } catch (error) {
+                            console.error('Ошибка при запуске одиночной игры:', error);
+                        }
+                    });
+                    
+                    console.log('Все компоненты успешно инициализированы');
+                } catch (error) {
+                    console.error('Ошибка при инициализации:', error);
+                }
             });
         </script>
 
