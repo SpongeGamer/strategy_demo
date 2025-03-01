@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
     <head>
-        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <meta charset="UTF-8">
         <title>RTS Demo</title>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         
@@ -32,35 +32,38 @@
         <script type="module">
             import { game } from './src/engine/game.js';
             import { singleplayer } from './src/game-modes/singleplayer.js';
+            import { initInterface } from './src/ui/interface.js';
+            import { initMinimap } from './src/ui/minimap.js';
+            import { initSidebar } from './src/ui/sidebar.js';
             
             window.addEventListener('load', () => {
                 game.init();
+                initInterface();
+                initMinimap();
+                initSidebar();
                 
-                // Добавляем обработчики событий для кнопок
-                document.getElementById('singleplayer').addEventListener('click', () => {
-                    singleplayer.start();
-                });
+                document.getElementById('singleplayer').addEventListener('click', singleplayer.start);
             });
         </script>
 
         <link rel="stylesheet" href="src/css/styles.css" type="text/css" media="screen" charset="utf-8">
     </head>
     <body>
-        <div id="gamecontainer">
-            <div id="gamestartscreen" class="gamelayer">
+        <main id="gamecontainer">
+            <section id="gamestartscreen" class="gamelayer">
                 <h1>RTS Demo</h1>
-                <button id="singleplayer">Campaign</button>
-                <button id="multiplayer">Multiplayer</button>
-            </div>
+                <button id="singleplayer" class="btn">Campaign</button>
+                <button id="multiplayer" class="btn">Multiplayer</button>
+            </section>
             
-            <div id="gameinterfacescreen" class="gamelayer">
+            <section id="gameinterfacescreen" class="gamelayer">
                 <div id="gamecanvasarea">
                     <canvas id="gamebackgroundcanvas"></canvas>
                     <canvas id="gameforegroundcanvas"></canvas>
                 </div>
                 
                 <div id="gameinterface">
-                    <div id="resources">
+                    <section id="resources">
                         <div class="resource">
                             <div class="resource-icon trees"></div>
                             <span>Деревья: <span id="trees-count">0</span></span>
@@ -73,77 +76,39 @@
                             <div class="resource-icon gold"></div>
                             <span>Золото: <span id="gold-count">0</span></span>
                         </div>
-                    </div>
+                    </section>
 
-                    <div id="context-menu">
-                        <div class="context-menu-group">
-                            <div class="context-menu-item" data-unit="harvester">
-                                <div class="icon">🤖</div>
-                                <div class="info">
-                                    <div class="name">Harvester Bot</div>
-                                    <div class="description">Собирает ресурсы</div>
-                                </div>
-                                <div class="cost">M:30 G:10</div>
-                            </div>
+                    <section id="command-panel">
+                        <div class="command-group">
+                            <button class="command-button" data-action="buildings" title="Строительство">
+                                <span class="icon buildings"></span>
+                            </button>
+                            <button class="command-button" data-action="defenses" title="Оборона">
+                                <span class="icon defenses"></span>
+                            </button>
                         </div>
-                        <div class="context-menu-group buildings">
-                            <div class="context-menu-item" data-building="powerplant">
-                                <div class="icon">⚡</div>
-                                <div class="info">
-                                    <div class="name">Power Plant</div>
-                                    <div class="description">Производит энергию</div>
-                                </div>
-                                <div class="cost">M:50 G:20</div>
-                            </div>
-                            <div class="context-menu-item" data-building="barracks">
-                                <div class="icon">🏛️</div>
-                                <div class="info">
-                                    <div class="name">Barracks</div>
-                                    <div class="description">Тренирует пехоту</div>
-                                </div>
-                                <div class="cost">M:100 G:30</div>
-                            </div>
-                            <div class="context-menu-item" data-building="factory">
-                                <div class="icon">🏭</div>
-                                <div class="info">
-                                    <div class="name">Factory</div>
-                                    <div class="description">Производит технику</div>
-                                </div>
-                                <div class="cost">M:150 G:50</div>
-                            </div>
+                        <div class="command-group">
+                            <button class="command-button" data-action="infantry" title="Пехота">
+                                <span class="icon infantry"></span>
+                            </button>
+                            <button class="command-button" data-action="vehicles" title="Техника">
+                                <span class="icon vehicles"></span>
+                            </button>
+                            <button class="command-button" data-action="aircraft" title="Авиация">
+                                <span class="icon aircraft"></span>
+                            </button>
                         </div>
-                    </div>
+                    </section>
 
-                    <div id="minimap">
+                    <section id="minimap">
                         <canvas id="minimapcanvas"></canvas>
-                    </div>
-
-                    <div id="command-panel">
-                        <div class="command-group">
-                            <button class="command-button buildings" title="Строительство"></button>
-                            <button class="command-button defenses" title="Оборона"></button>
-                        </div>
-                        <div class="command-group">
-                            <button class="command-button infantry" title="Пехота"></button>
-                            <button class="command-button vehicles" title="Техника"></button>
-                            <button class="command-button aircraft" title="Авиация"></button>
-                        </div>
-                    </div>
-
-                    <div id="sidebarbuttons" style="display: none;">
-                        <input type="button" id="starportbutton" title="Starport">
-                        <input type="button" id="turretbutton" title="Turret">
-                        <input type="button" id="placeholder1" disabled>
-                        <input type="button" id="scouttankbutton" title="Scout Tank">
-                        <input type="button" id="heavytankbutton" title="Heavy Tank">
-                        <input type="button" id="harvesterbutton" title="Harvester">
-                    </div>
+                    </section>
                 </div>
-            </div>
+            </section>
 
-            <div id="loadingscreen" class="gamelayer">
+            <section id="loadingscreen" class="gamelayer">
                 <div id="loadingmessage"></div>
-            </div>
-        </div>
+            </section>
+        </main>
     </body>
 </html>
