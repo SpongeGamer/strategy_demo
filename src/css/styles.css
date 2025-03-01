@@ -159,66 +159,33 @@ body {
 }
 
 .resource {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    font-size: 16px;
-    color: var(--text-light);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* Контекстное меню */
-#context-menu {
     position: absolute;
-    background-color: rgba(0, 0, 0, 0.8);
-    border: 1px solid #444;
-    border-radius: 5px;
-    padding: 5px;
-    z-index: 1000;
-    display: none;
-    min-width: 200px;
-}
-
-.context-menu-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
-.context-menu-item {
-    display: flex;
-    align-items: center;
-    padding: 5px;
-    color: white;
+    width: 24px;
+    height: 24px;
+    z-index: 5;
     cursor: pointer;
-    border-radius: 3px;
+    box-sizing: border-box;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-.context-menu-item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.resource-metal {
+    background-color: #888888;
+    border: 1px solid #555555;
+    background-image: 
+        linear-gradient(45deg, #888888 25%, #aaaaaa 25%, #aaaaaa 50%, #888888 50%, #888888 75%, #aaaaaa 75%, #aaaaaa);
+    background-size: 8px 8px;
 }
 
-.context-menu-item .icon {
-    margin-right: 10px;
-    font-size: 20px;
-}
-
-.context-menu-item .info {
-    flex-grow: 1;
-}
-
-.context-menu-item .name {
-    font-weight: bold;
-}
-
-.context-menu-item .description {
-    font-size: 12px;
-    color: #aaa;
-}
-
-.context-menu-item .cost {
-    font-size: 12px;
-    color: #ffcc00;
+.resource-gold {
+    background-color: #ffd700;
+    border: 1px solid #cc9900;
+    background-image: 
+        linear-gradient(45deg, #ffd700 25%, #ffee77 25%, #ffee77 50%, #ffd700 50%, #ffd700 75%, #ffee77 75%, #ffee77);
+    background-size: 8px 8px;
 }
 
 /* Стили для панели ресурсов */
@@ -241,24 +208,25 @@ body {
 }
 
 .resource-icon {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    border-radius: 0;
 }
 
-.metal-icon::before {
-    content: '🔧';
+.metal-icon {
+    background-color: #888;
+    border: 1px solid #666;
+    background-image: 
+        linear-gradient(45deg, #888888 25%, #aaaaaa 25%, #aaaaaa 50%, #888888 50%, #888888 75%, #aaaaaa 75%, #aaaaaa);
+    background-size: 6px 6px;
 }
 
-.gold-icon::before {
-    content: '💰';
-}
-
-.energy-icon::before {
-    content: '⚡';
+.gold-icon {
+    background-color: #ffd700;
+    border: 1px solid #cc9900;
+    background-image: 
+        linear-gradient(45deg, #ffd700 25%, #ffee77 25%, #ffee77 50%, #ffd700 50%, #ffd700 75%, #ffee77 75%, #ffee77);
+    background-size: 6px 6px;
 }
 
 .resource-amount {
@@ -272,8 +240,8 @@ body {
     position: absolute;
     bottom: 10px;
     right: 10px;
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
     background-color: rgba(0, 0, 0, 0.7);
     border: 2px solid #444;
     z-index: 100;
@@ -432,27 +400,29 @@ body {
     transition: width 0.3s;
 }
 
+/* Стили для выделенных юнитов */
+.unit.selected {
+    border: 2px solid #ffff00;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+}
+
 /* Стили для всплывающих сообщений */
 .floating-message {
     position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
     color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
     font-size: 14px;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px black;
-    z-index: 200;
     pointer-events: none;
-    animation: float-up 2s forwards;
+    z-index: 1000;
+    animation: fadeOut 2s forwards;
 }
 
-@keyframes float-up {
-    0% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
 /* Стили для тайлов карты */
@@ -460,42 +430,90 @@ body {
     position: absolute;
     width: 32px;
     height: 32px;
-    background-size: cover;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .tile-grass {
-    background-image: url('../assets/tiles/grass.png');
+    background-color: #3a7a3a;
 }
 
 .tile-water {
-    background-image: url('../assets/tiles/water.png');
-}
-
-.tile-mountain {
-    background-image: url('../assets/tiles/mountain.png');
+    background-color: #3a6ac5;
 }
 
 .tile-forest {
-    background-image: url('../assets/tiles/forest.png');
+    background-color: #1d5735;
+    position: relative;
+}
+
+.tile-forest::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 70%;
+    background-color: #0e3a1e;
+    border-radius: 50% 50% 20% 50%;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.tile-mountain {
+    background-color: #5a5a5a;
+    background-image: linear-gradient(135deg, #5a5a5a 0%, #777777 50%, #5a5a5a 100%);
+    position: relative;
+}
+
+.tile-mountain::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 16px solid #777;
+    z-index: 1;
 }
 
 /* Стили для ресурсов */
 .resource {
     position: absolute;
-    width: 32px;
-    height: 32px;
-    background-size: contain;
-    background-repeat: no-repeat;
+    width: 24px;
+    height: 24px;
     z-index: 5;
     cursor: pointer;
+    box-sizing: border-box;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
 .resource-metal {
-    background-image: url('../assets/resources/metal.png');
+    background-color: #888888;
+    border: 1px solid #555555;
+    background-image: 
+        linear-gradient(45deg, #888888 25%, #aaaaaa 25%, #aaaaaa 50%, #888888 50%, #888888 75%, #aaaaaa 75%, #aaaaaa);
+    background-size: 8px 8px;
 }
 
 .resource-gold {
-    background-image: url('../assets/resources/gold.png');
+    background-color: #ffd700;
+    border: 1px solid #cc9900;
+    background-image: 
+        linear-gradient(45deg, #ffd700 25%, #ffee77 25%, #ffee77 50%, #ffd700 50%, #ffd700 75%, #ffee77 75%, #ffee77);
+    background-size: 8px 8px;
 }
 
 .gamecanvas {
@@ -512,4 +530,154 @@ body {
 
 #gameforegroundcanvas {
     z-index: 2;
+}
+
+/* Стили для контейнера карты */
+#map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    background-color: #222;
+}
+
+/* Стили для тайлов */
+.tile {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+/* Стили для разных типов тайлов */
+.tile-grass {
+    background-color: #3a7a3a;
+}
+
+.tile-water {
+    background-color: #3a6ac5;
+    background-image: linear-gradient(135deg, #3a6ac5 0%, #4a7ad5 50%, #3a6ac5 100%);
+}
+
+.tile-mountain {
+    background-color: #5a5a5a;
+    background-image: linear-gradient(135deg, #5a5a5a 0%, #777777 50%, #5a5a5a 100%);
+}
+
+.tile-forest {
+    background-color: #1d5735;
+    position: relative;
+}
+
+.tree {
+    width: 70%;
+    height: 70%;
+    background-color: #0e3a1e;
+    border-radius: 50% 50% 20% 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.tree::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30%;
+    height: 20%;
+    background-color: #5a3825;
+    border-radius: 20%;
+    z-index: 0;
+}
+
+/* Стили для юнитов */
+.unit {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    z-index: 3;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.unit:hover {
+    transform: scale(1.1);
+}
+
+.unit-selected {
+    border: 2px solid yellow;
+    box-shadow: 0 0 10px yellow;
+}
+
+/* Стили для зданий */
+.building {
+    position: absolute;
+    z-index: 2;
+    cursor: pointer;
+}
+
+/* Стили для базы */
+.base {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    background-color: #cc0000;
+    border: 2px solid #990000;
+    z-index: 3;
+}
+
+.enemy-base {
+    background-color: #0000cc;
+    border: 2px solid #000099;
+}
+
+/* Стили для панели ресурсов */
+#resource-panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 15px;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.resource-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 0;
+}
+
+.metal-icon {
+    background-color: #888;
+    border: 1px solid #666;
+    background-image: 
+        linear-gradient(45deg, #888888 25%, #aaaaaa 25%, #aaaaaa 50%, #888888 50%, #888888 75%, #aaaaaa 75%, #aaaaaa);
+    background-size: 6px 6px;
+}
+
+.gold-icon {
+    background-color: #ffd700;
+    border: 1px solid #cc9900;
+    background-image: 
+        linear-gradient(45deg, #ffd700 25%, #ffee77 25%, #ffee77 50%, #ffd700 50%, #ffd700 75%, #ffee77 75%, #ffee77);
+    background-size: 6px 6px;
 } 

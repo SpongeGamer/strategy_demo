@@ -4,11 +4,20 @@ import { Maps, TILE_SIZE } from '../engine/maps.js';
 
 class Singleplayer {
     constructor() {
-        this.isRunning = false;
-        this.difficulty = 'normal';
+        this.gameMap = null;
         this.mapSize = 'medium';
+        this.difficulty = 'normal';
+        this.gameLoop = this.gameLoop.bind(this);
+        this.lastFrameTime = 0;
+        this.isRunning = false;
+        this.selectedUnit = null;
+        this.resources = []; // Инициализируем массив ресурсов
+        this.units = [];
+        this.buildings = [];
+        this.enemies = [];
         this.playerBase = null;
         this.enemyBase = null;
+        this.selectedEntity = null;
     }
 
     start() {
@@ -44,9 +53,6 @@ class Singleplayer {
                 
                 // Создаем мини-карту
                 this.createMinimap();
-                
-                // Создаем панель команд
-                this.createCommandPanel();
             } else {
                 console.error('Элемент gameinterfacescreen не найден!');
                 return;
@@ -77,14 +83,14 @@ class Singleplayer {
             let mapSize;
             switch (this.mapSize) {
                 case 'small':
-                    mapSize = { width: 30, height: 20 };
+                    mapSize = { width: 50, height: 40 };
                     break;
                 case 'large':
-                    mapSize = { width: 60, height: 40 };
+                    mapSize = { width: 100, height: 80 };
                     break;
                 case 'medium':
                 default:
-                    mapSize = { width: 40, height: 30 };
+                    mapSize = { width: 80, height: 60 };
                     break;
             }
             
@@ -102,6 +108,9 @@ class Singleplayer {
             // Добавляем ресурсы на карту
             this.placeResources();
             
+            // Инициализируем управление камерой
+            this.initCameraControls();
+            
             console.log('Карта инициализирована и отображена');
         } catch (error) {
             console.error('Ошибка при инициализации карты:', error);
@@ -116,56 +125,110 @@ class Singleplayer {
             let resourceCount;
             switch (this.mapSize) {
                 case 'small':
-                    resourceCount = { metal: 4, gold: 2 };
+                    resourceCount = { metal: 15, gold: 8 };
                     break;
                 case 'large':
-                    resourceCount = { metal: 12, gold: 6 };
+                    resourceCount = { metal: 40, gold: 20 };
                     break;
                 case 'medium':
                 default:
-                    resourceCount = { metal: 8, gold: 4 };
+                    resourceCount = { metal: 25, gold: 12 };
                     break;
             }
             
-            // Размещаем металл
-            for (let i = 0; i < resourceCount.metal; i++) {
-                this.placeResourceNode('metal');
-            }
+            // Размещаем металл группами
+            this.placeResourceGroups('metal', resourceCount.metal);
             
-            // Размещаем золото
-            for (let i = 0; i < resourceCount.gold; i++) {
-                this.placeResourceNode('gold');
-            }
+            // Размещаем золото группами
+            this.placeResourceGroups('gold', resourceCount.gold);
             
             console.log('Ресурсы размещены');
         } catch (error) {
             console.error('Ошибка при размещении ресурсов:', error);
         }
     }
-
-    placeResourceNode(type) {
-        // Находим свободное место для ресурса
-        let x, y;
-        let attempts = 0;
-        const maxAttempts = 50;
+    
+    placeResourceGroups(type, totalCount) {
+        // Определяем количество групп ресурсов
+        const groupCount = Math.max(3, Math.floor(totalCount / 3));
+        const resourcesPerGroup = Math.ceil(totalCount / groupCount);
         
-        do {
-            x = Math.floor(Math.random() * this.gameMap.width);
-            y = Math.floor(Math.random() * this.gameMap.height);
+        for (let i = 0; i < groupCount; i++) {
+            // Находим подходящее место для группы ресурсов
+            let centerX, centerY;
+            let attempts = 0;
+            const maxAttempts = 50;
             
-            // Проверяем, что место свободно (не вода, не гора, не лес)
-            const tile = this.gameMap.tiles[y][x];
-            if (tile.type !== 'water' && tile.type !== 'mountain' && tile.type !== 'forest' && !tile.resource) {
-                break;
+            do {
+                centerX = Math.floor(Math.random() * this.gameMap.width);
+                centerY = Math.floor(Math.random() * this.gameMap.height);
+                
+                // Проверяем, что место подходит для размещения группы ресурсов
+                const tile = this.gameMap.tiles[centerY][centerX];
+                if (tile.type === 'grass' && !tile.resource && !tile.occupied) {
+                    break;
+                }
+                
+                attempts++;
+            } while (attempts < maxAttempts);
+            
+            if (attempts >= maxAttempts) {
+                console.warn('Не удалось найти место для группы ресурсов');
+                continue;
             }
             
-            attempts++;
-        } while (attempts < maxAttempts);
-        
-        if (attempts >= maxAttempts) {
-            console.warn('Не удалось найти место для ресурса');
-            return;
+            // Размещаем группу ресурсов вокруг центральной точки
+            const groupSize = Math.floor(Math.random() * 2) + 2; // Размер группы от 2 до 3
+            let placedInGroup = 0;
+            
+            for (let j = 0; j < resourcesPerGroup && placedInGroup < resourcesPerGroup; j++) {
+                // Выбираем случайное смещение от центра
+                const offsetX = Math.floor(Math.random() * (groupSize * 2 + 1)) - groupSize;
+                const offsetY = Math.floor(Math.random() * (groupSize * 2 + 1)) - groupSize;
+                
+                const x = centerX + offsetX;
+                const y = centerY + offsetY;
+                
+                // Проверяем, что координаты в пределах карты
+                if (x >= 0 && x < this.gameMap.width && y >= 0 && y < this.gameMap.height) {
+                    // Проверяем, что место свободно
+                    const tile = this.gameMap.tiles[y][x];
+                    if (tile.type === 'grass' && !tile.resource && !tile.occupied) {
+                        this.placeResourceNode(type, x, y);
+                        placedInGroup++;
+                    }
+                }
+            }
         }
+    }
+
+    placeResourceNode(type, x, y) {
+        // Если координаты не переданы, находим свободное место для ресурса
+        if (x === undefined || y === undefined) {
+            let attempts = 0;
+            const maxAttempts = 50;
+            
+            do {
+                x = Math.floor(Math.random() * this.gameMap.width);
+                y = Math.floor(Math.random() * this.gameMap.height);
+                
+                // Проверяем, что место свободно (не вода, не гора, не лес)
+                const tile = this.gameMap.tiles[y][x];
+                if (tile.type === 'grass' && !tile.resource && !tile.occupied) {
+                    break;
+                }
+                
+                attempts++;
+            } while (attempts < maxAttempts);
+            
+            if (attempts >= maxAttempts) {
+                console.warn('Не удалось найти место для ресурса');
+                return;
+            }
+        }
+        
+        // Отмечаем тайл как содержащий ресурс
+        this.gameMap.tiles[y][x].resource = type;
         
         // Создаем элемент ресурса
         const resourceElement = document.createElement('div');
@@ -173,25 +236,42 @@ class Singleplayer {
         resourceElement.style.left = `${x * TILE_SIZE}px`;
         resourceElement.style.top = `${y * TILE_SIZE}px`;
         
-        // Добавляем ресурс на игровой экран
-        const gameInterface = document.getElementById('gameinterfacescreen');
-        gameInterface.appendChild(resourceElement);
+        // Используем простые цветные квадраты вместо эмодзи
+        resourceElement.style.backgroundColor = type === 'metal' ? '#aaaaaa' : '#ffcc00';
+        resourceElement.style.border = '1px solid #000';
         
-        // Сохраняем информацию о ресурсе
-        const resource = {
-            element: resourceElement,
+        // Добавляем ресурс в контейнер карты
+        const mapContainer = document.getElementById('map-container');
+        if (mapContainer) {
+            mapContainer.appendChild(resourceElement);
+        } else {
+            // Если контейнер карты не найден, создаем его
+            const newMapContainer = document.createElement('div');
+            newMapContainer.id = 'map-container';
+            newMapContainer.style.position = 'absolute';
+            newMapContainer.style.top = '0';
+            newMapContainer.style.left = '0';
+            newMapContainer.style.width = '100%';
+            newMapContainer.style.height = '100%';
+            newMapContainer.style.overflow = 'hidden';
+            
+            const gameInterface = document.getElementById('gameinterfacescreen');
+            gameInterface.appendChild(newMapContainer);
+            mapContainer.appendChild(resourceElement);
+        }
+        
+        // Добавляем ресурс в список ресурсов
+        const resourceId = `resource-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        resourceElement.id = resourceId;
+        
+        this.resources.push({
+            id: resourceId,
+            type: type,
             x: x,
             y: y,
-            type: type,
-            amount: type === 'metal' ? 500 : 300
-        };
-        
-        // Добавляем ресурс в список сущностей
-        if (!GameState.entities) GameState.entities = [];
-        GameState.entities.push(resource);
-        
-        // Отмечаем тайл как занятый ресурсом
-        this.gameMap.tiles[y][x].resource = resource;
+            amount: type === 'metal' ? 1000 : 500, // Металла больше, чем золота
+            element: resourceElement
+        });
     }
 
     placePlayerBase() {
@@ -203,9 +283,10 @@ class Singleplayer {
                 return;
             }
             
-            // Находим подходящее место для базы игрока (в левом нижнем углу карты)
-            const baseX = Math.floor(this.gameMap.width * 0.2);
-            const baseY = Math.floor(this.gameMap.height * 0.8);
+            // Получаем фиксированные позиции баз
+            const basePositions = this.gameMap.getBasePositions();
+            const baseX = basePositions.player.x;
+            const baseY = basePositions.player.y;
             
             // Создаем базу
             this.playerBase = {
@@ -230,6 +311,28 @@ class Singleplayer {
                 }
             }
             
+            // Создаем визуальное представление базы
+            const baseElement = document.createElement('div');
+            baseElement.className = 'base player-base';
+            baseElement.style.position = 'absolute';
+            baseElement.style.left = `${baseX * this.gameMap.tileSize - this.gameMap.tileSize}px`;
+            baseElement.style.top = `${baseY * this.gameMap.tileSize - this.gameMap.tileSize}px`;
+            baseElement.style.width = `${this.gameMap.tileSize * 3}px`;
+            baseElement.style.height = `${this.gameMap.tileSize * 3}px`;
+            baseElement.style.backgroundColor = '#00aa00';
+            baseElement.style.border = '2px solid #00ff00';
+            baseElement.style.borderRadius = '5px';
+            baseElement.style.zIndex = '10';
+            baseElement.style.boxSizing = 'border-box';
+            
+            // Добавляем базу на карту
+            const mapContainer = document.getElementById('map-container');
+            if (mapContainer) {
+                mapContainer.appendChild(baseElement);
+            } else {
+                console.error('Контейнер карты не найден!');
+            }
+            
             console.log(`База игрока размещена на координатах: ${baseX}, ${baseY}`);
         } catch (error) {
             console.error('Ошибка при размещении базы игрока:', error);
@@ -245,9 +348,10 @@ class Singleplayer {
                 return;
             }
             
-            // Находим подходящее место для вражеской базы (в правом верхнем углу карты)
-            const baseX = Math.floor(this.gameMap.width * 0.8);
-            const baseY = Math.floor(this.gameMap.height * 0.2);
+            // Получаем фиксированные позиции баз
+            const basePositions = this.gameMap.getBasePositions();
+            const baseX = basePositions.enemy.x;
+            const baseY = basePositions.enemy.y;
             
             // Создаем базу
             this.enemyBase = {
@@ -272,141 +376,147 @@ class Singleplayer {
                 }
             }
             
+            // Создаем визуальное представление базы
+            const baseElement = document.createElement('div');
+            baseElement.className = 'base enemy-base';
+            baseElement.style.position = 'absolute';
+            baseElement.style.left = `${baseX * this.gameMap.tileSize - this.gameMap.tileSize}px`;
+            baseElement.style.top = `${baseY * this.gameMap.tileSize - this.gameMap.tileSize}px`;
+            baseElement.style.width = `${this.gameMap.tileSize * 3}px`;
+            baseElement.style.height = `${this.gameMap.tileSize * 3}px`;
+            baseElement.style.backgroundColor = '#aa0000';
+            baseElement.style.border = '2px solid #ff0000';
+            baseElement.style.borderRadius = '5px';
+            baseElement.style.zIndex = '10';
+            baseElement.style.boxSizing = 'border-box';
+            
+            // Добавляем базу на карту
+            const mapContainer = document.getElementById('map-container');
+            if (mapContainer) {
+                mapContainer.appendChild(baseElement);
+            } else {
+                console.error('Контейнер карты не найден!');
+            }
+            
             console.log(`Вражеская база размещена на координатах: ${baseX}, ${baseY}`);
         } catch (error) {
             console.error('Ошибка при размещении вражеской базы:', error);
         }
     }
 
-    selectBase(base) {
-        console.log(`Выбрана база ${base.owner}`);
-        GameState.selectedEntity = base;
+    selectUnit(unit) {
+        // Выбираем юнит
+        this.selectedEntity = unit;
+        this.updateSelectedInfo(unit);
         
-        // Обновляем информацию о выбранном объекте
-        this.updateSelectedInfo(base);
+        // Добавляем обработчик ПКМ для отправки юнита
+        document.addEventListener('contextmenu', this.handleUnitRightClick);
     }
-
-    showBaseMenu(e, base) {
-        if (base.owner !== 'player') return;
+    
+    // Обработчик ПКМ для отправки юнита
+    handleUnitRightClick = (e) => {
+        e.preventDefault(); // Предотвращаем стандартное контекстное меню
         
-        console.log('Показываем меню базы');
-        
-        // Получаем контекстное меню
-        const contextMenu = document.getElementById('context-menu');
-        if (!contextMenu) {
-            console.error('Элемент context-menu не найден!');
+        // Проверяем, что у нас есть выбранный юнит
+        if (!this.selectedEntity || this.selectedEntity.type !== 'unit') {
             return;
         }
         
-        // Очищаем меню
-        contextMenu.innerHTML = '';
+        // Получаем координаты клика относительно карты
+        const mapContainer = document.getElementById('map-container');
+        if (!mapContainer) return;
         
-        // Создаем пункт меню для создания сборщика ресурсов
-        const harvesterItem = document.createElement('div');
-        harvesterItem.className = 'context-menu-item';
-        harvesterItem.innerHTML = `
-            <div class="icon">🤖</div>
-            <div class="info">
-                <div class="name">Harvester Bot</div>
-                <div class="description">Собирает ресурсы</div>
-            </div>
-            <div class="cost">M:30 G:10</div>
-        `;
+        const rect = mapContainer.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) / this.gameMap.tileSize);
+        const y = Math.floor((e.clientY - rect.top) / this.gameMap.tileSize);
         
-        // Добавляем обработчик клика
-        harvesterItem.addEventListener('click', () => {
-            this.createHarvester(base);
-            contextMenu.style.display = 'none';
-        });
+        // Проверяем, что координаты в пределах карты
+        if (x < 0 || x >= this.gameMap.width || y < 0 || y >= this.gameMap.height) {
+            return;
+        }
         
-        // Добавляем пункт в меню
-        contextMenu.appendChild(harvesterItem);
+        // Проверяем, на что кликнули
+        const targetElement = document.elementFromPoint(e.clientX, e.clientY);
         
-        // Отображаем меню
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = `${e.clientX}px`;
-        contextMenu.style.top = `${e.clientY}px`;
-        
-        // Закрываем меню при клике вне его
-        const closeMenu = (e) => {
-            if (!contextMenu.contains(e.target)) {
-                contextMenu.style.display = 'none';
-                document.removeEventListener('click', closeMenu);
-            }
-        };
-        
-        // Добавляем обработчик с небольшой задержкой
-        setTimeout(() => {
-            document.addEventListener('click', closeMenu);
-        }, 100);
-    }
-
-    createHarvester(base) {
-        const cost = { metal: 30, gold: 10 };
-        
-        if (GameState.hasEnoughResources(cost)) {
-            GameState.deductResources(cost);
-            
-            // Создаем элемент сборщика
-            const harvesterElement = document.createElement('div');
-            harvesterElement.className = 'unit unit-harvester';
-            harvesterElement.id = `harvester-${Date.now()}`;
-            
-            // Размещаем сборщика рядом с базой
-            const x = base.x * TILE_SIZE + 64;
-            const y = base.y * TILE_SIZE;
-            
-            harvesterElement.style.left = `${x}px`;
-            harvesterElement.style.top = `${y}px`;
-            
-            // Добавляем сборщика на игровой экран
-            const gameInterface = document.getElementById('gameinterfacescreen');
-            gameInterface.appendChild(harvesterElement);
-            
-            // Создаем объект сборщика
-            const harvester = {
-                element: harvesterElement,
-                x: x / TILE_SIZE,
-                y: y / TILE_SIZE,
-                health: 100,
-                maxHealth: 100,
-                speed: 0.05,
-                type: 'harvester',
-                owner: 'player',
-                state: 'idle',
-                target: null,
-                resources: 0,
-                maxResources: 20
-            };
-            
-            // Добавляем обработчик клика
-            harvesterElement.addEventListener('click', (e) => {
-                this.selectUnit(harvester);
-                e.stopPropagation();
-            });
-            
-            // Добавляем сборщика в список юнитов
-            if (!GameState.entities) GameState.entities = [];
-            GameState.entities.push(harvester);
-            
-            // Отображаем сообщение
-            this.showFloatingMessage('Harvester created', x, y);
-            
-            console.log('Создан сборщик ресурсов');
-        } else {
-            console.log('Недостаточно ресурсов для создания сборщика');
-            this.showFloatingMessage('Not enough resources', base.x * TILE_SIZE, base.y * TILE_SIZE);
+        // Если кликнули на ресурс
+        if (targetElement && targetElement.classList.contains('resource')) {
+            // Отправляем юнит добывать ресурс
+            this.sendUnitToHarvestResource(this.selectedEntity, targetElement.dataset.resourceId);
+            this.showFloatingMessage('Добываю ресурс', e.clientX, e.clientY);
+        }
+        // Если кликнули на врага
+        else if (targetElement && targetElement.classList.contains('enemy-unit')) {
+            // Отправляем юнит атаковать врага
+            this.sendUnitToAttackEnemy(this.selectedEntity, targetElement.dataset.unitId);
+            this.showFloatingMessage('Атакую врага', e.clientX, e.clientY);
+        }
+        // В остальных случаях просто перемещаем юнит
+        else {
+            // Отправляем юнит в указанную точку
+            this.sendUnitToLocation(this.selectedEntity, x, y);
+            this.showFloatingMessage('Перемещаюсь', e.clientX, e.clientY);
         }
     }
-
-    selectUnit(unit) {
-        console.log(`Выбран юнит ${unit.type}`);
-        GameState.selectedEntity = unit;
+    
+    // Отправляет юнит в указанную локацию
+    sendUnitToLocation(unit, x, y) {
+        console.log(`Отправляем юнит ${unit.id} в точку ${x}, ${y}`);
         
-        // Обновляем информацию о выбранном объекте
-        this.updateSelectedInfo(unit);
+        // Здесь будет логика перемещения юнита
+        // Пока просто обновляем его позицию для демонстрации
+        unit.targetX = x;
+        unit.targetY = y;
+        unit.isMoving = true;
+        unit.path = []; // Здесь будет путь юнита
+        
+        // В будущем здесь будет поиск пути и анимация движения
     }
-
+    
+    // Отправляет юнит добывать ресурс
+    sendUnitToHarvestResource(unit, resourceId) {
+        console.log(`Отправляем юнит ${unit.id} добывать ресурс ${resourceId}`);
+        
+        // Находим ресурс по ID
+        const resource = this.resources.find(r => r.id === resourceId);
+        if (!resource) return;
+        
+        // Отправляем юнит к ресурсу
+        unit.targetX = resource.x;
+        unit.targetY = resource.y;
+        unit.isMoving = true;
+        unit.isHarvesting = true;
+        unit.harvestingResourceId = resourceId;
+        
+        // В будущем здесь будет логика добычи ресурса и возврата на базу
+    }
+    
+    // Отправляет юнит атаковать врага
+    sendUnitToAttackEnemy(unit, enemyId) {
+        console.log(`Отправляем юнит ${unit.id} атаковать врага ${enemyId}`);
+        
+        // Находим врага по ID
+        const enemy = this.enemyUnits.find(e => e.id === enemyId);
+        if (!enemy) return;
+        
+        // Отправляем юнит к врагу
+        unit.targetX = enemy.x;
+        unit.targetY = enemy.y;
+        unit.isMoving = true;
+        unit.isAttacking = true;
+        unit.attackingEnemyId = enemyId;
+        
+        // В будущем здесь будет логика атаки
+    }
+    
+    // Удаляем обработчик ПКМ при отмене выбора юнита
+    unselectUnit() {
+        this.selectedEntity = null;
+        this.updateSelectedInfo(null);
+        
+        // Удаляем обработчик ПКМ
+        document.removeEventListener('contextmenu', this.handleUnitRightClick);
+    }
+    
     updateSelectedInfo(entity) {
         // Получаем элемент информации о выбранном объекте
         let infoElement = document.getElementById('selected-info');
@@ -509,8 +619,14 @@ class Singleplayer {
         this.isRunning = false;
         
         try {
+            // Очищаем интервал обновления камеры
+            if (this.cameraInterval) {
+                clearInterval(this.cameraInterval);
+                this.cameraInterval = null;
+            }
+            
             // Показываем стартовый экран
-            const startScreen = document.getElementById('gamestartscreen');
+            const startScreen = document.getElementById('startscreen');
             if (startScreen) {
                 startScreen.style.display = 'block';
             }
@@ -543,26 +659,35 @@ class Singleplayer {
         try {
             // Создаем панель ресурсов
             const resourcePanel = document.createElement('div');
-            resourcePanel.id = 'resource-panel';
             resourcePanel.className = 'resource-panel';
             
-            // Добавляем ресурсы
-            resourcePanel.innerHTML = `
-                <div class="resource-item">
-                    <div class="resource-icon metal-icon"></div>
-                    <div class="resource-amount" id="metal-amount">${GameState.resources.metal}</div>
-                </div>
-                <div class="resource-item">
-                    <div class="resource-icon gold-icon"></div>
-                    <div class="resource-amount" id="gold-amount">${GameState.resources.gold}</div>
-                </div>
-                <div class="resource-item">
-                    <div class="resource-icon energy-icon"></div>
-                    <div class="resource-amount" id="energy-amount">${GameState.resources.energy}</div>
-                </div>
-            `;
+            // Добавляем элементы для каждого типа ресурсов
+            const resources = ['metal', 'gold', 'energy'];
+            const emojis = {
+                'metal': '🔧',
+                'gold': '💰',
+                'energy': '⚡'
+            };
             
-            // Добавляем панель на игровой экран
+            resources.forEach(resource => {
+                const resourceItem = document.createElement('div');
+                resourceItem.className = 'resource-item';
+                
+                const resourceIcon = document.createElement('div');
+                resourceIcon.className = 'resource-icon';
+                resourceIcon.textContent = emojis[resource];
+                
+                const resourceAmount = document.createElement('div');
+                resourceAmount.className = 'resource-amount';
+                resourceAmount.id = `${resource}-amount`;
+                resourceAmount.textContent = GameState.resources[resource] || 0;
+                
+                resourceItem.appendChild(resourceIcon);
+                resourceItem.appendChild(resourceAmount);
+                resourcePanel.appendChild(resourceItem);
+            });
+            
+            // Добавляем панель ресурсов на игровой экран
             const gameInterface = document.getElementById('gameinterfacescreen');
             gameInterface.appendChild(resourcePanel);
             
@@ -583,8 +708,8 @@ class Singleplayer {
             // Создаем канвас для мини-карты
             const minimapCanvas = document.createElement('canvas');
             minimapCanvas.id = 'minimapcanvas';
-            minimapCanvas.width = 150;
-            minimapCanvas.height = 150;
+            minimapCanvas.width = 200;
+            minimapCanvas.height = 200;
             
             // Добавляем канвас в контейнер
             minimapContainer.appendChild(minimapCanvas);
@@ -614,11 +739,18 @@ class Singleplayer {
         if (!minimapCanvas) return;
         
         const ctx = minimapCanvas.getContext('2d');
-        const tileSize = minimapCanvas.width / this.gameMap.width;
+        const tileSize = Math.min(
+            minimapCanvas.width / this.gameMap.width,
+            minimapCanvas.height / this.gameMap.height
+        );
         
         // Очищаем миникарту
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+        
+        // Вычисляем смещение для центрирования карты на миникарте
+        const offsetX = (minimapCanvas.width - this.gameMap.width * tileSize) / 2;
+        const offsetY = (minimapCanvas.height - this.gameMap.height * tileSize) / 2;
         
         // Отрисовываем тайлы на миникарте
         for (let y = 0; y < this.gameMap.height; y++) {
@@ -628,36 +760,86 @@ class Singleplayer {
                 // Выбираем цвет в зависимости от типа тайла
                 switch (tile.type) {
                     case 'grass':
-                        ctx.fillStyle = '#4a9e4a';
+                        ctx.fillStyle = '#3a7a3a';
                         break;
                     case 'water':
-                        ctx.fillStyle = '#4a82e5';
+                        ctx.fillStyle = '#3a6ac5';
                         break;
                     case 'mountain':
-                        ctx.fillStyle = '#7a7a7a';
+                        ctx.fillStyle = '#5a5a5a';
                         break;
                     case 'forest':
-                        ctx.fillStyle = '#2d7755';
+                        ctx.fillStyle = '#1d5735';
                         break;
                     default:
-                        ctx.fillStyle = '#4a9e4a';
+                        ctx.fillStyle = '#3a7a3a';
                 }
                 
                 // Рисуем тайл
-                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                ctx.fillRect(
+                    offsetX + x * tileSize, 
+                    offsetY + y * tileSize, 
+                    tileSize, 
+                    tileSize
+                );
+                
+                // Отображаем ресурсы на миникарте
+                if (tile.resource) {
+                    if (tile.resource.type === 'metal') {
+                        ctx.fillStyle = '#aaaaaa'; // Серый для металла
+                    } else if (tile.resource.type === 'gold') {
+                        ctx.fillStyle = '#ffcc00'; // Золотой для золота
+                    }
+                    
+                    // Рисуем ресурс как маленький квадрат
+                    const resourceSize = Math.max(tileSize * 0.7, 1);
+                    const offset = (tileSize - resourceSize) / 2;
+                    ctx.fillRect(
+                        offsetX + x * tileSize + offset,
+                        offsetY + y * tileSize + offset,
+                        resourceSize,
+                        resourceSize
+                    );
+                }
             }
+        }
+        
+        // Отмечаем базы на миникарте
+        if (this.playerBase) {
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(
+                offsetX + this.playerBase.x * tileSize - tileSize, 
+                offsetY + this.playerBase.y * tileSize - tileSize, 
+                tileSize * 3, 
+                tileSize * 3
+            );
+        }
+        
+        if (this.enemyBase) {
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(
+                offsetX + this.enemyBase.x * tileSize - tileSize, 
+                offsetY + this.enemyBase.y * tileSize - tileSize, 
+                tileSize * 3, 
+                tileSize * 3
+            );
         }
         
         // Отмечаем позицию камеры на миникарте
         if (game.camera) {
-            const cameraX = game.camera.x / (this.gameMap.width * this.gameMap.tileSize) * minimapCanvas.width;
-            const cameraY = game.camera.y / (this.gameMap.height * this.gameMap.tileSize) * minimapCanvas.height;
-            const cameraWidth = game.canvasWidth / (this.gameMap.width * this.gameMap.tileSize) * minimapCanvas.width;
-            const cameraHeight = game.canvasHeight / (this.gameMap.height * this.gameMap.tileSize) * minimapCanvas.height;
+            const viewportWidth = game.canvasWidth / this.gameMap.tileSize;
+            const viewportHeight = game.canvasHeight / this.gameMap.tileSize;
+            const cameraX = game.camera.x / this.gameMap.tileSize;
+            const cameraY = game.camera.y / this.gameMap.tileSize;
             
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(cameraX, cameraY, cameraWidth, cameraHeight);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                offsetX + cameraX * tileSize, 
+                offsetY + cameraY * tileSize, 
+                viewportWidth * tileSize, 
+                viewportHeight * tileSize
+            );
         }
     }
 
@@ -676,14 +858,29 @@ class Singleplayer {
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
+            // Вычисляем размер тайла на миникарте
+            const tileSize = Math.min(
+                minimap.width / this.gameMap.width,
+                minimap.height / this.gameMap.height
+            );
+            
+            // Вычисляем смещение для центрирования карты на миникарте
+            const offsetX = (minimap.width - this.gameMap.width * tileSize) / 2;
+            const offsetY = (minimap.height - this.gameMap.height * tileSize) / 2;
+            
             // Преобразуем координаты мини-карты в координаты игровой карты
-            const mapX = Math.floor(x / minimap.width * this.gameMap.width);
-            const mapY = Math.floor(y / minimap.height * this.gameMap.height);
+            const mapX = Math.floor((x - offsetX) / tileSize);
+            const mapY = Math.floor((y - offsetY) / tileSize);
             
-            // Центрируем камеру на выбранной точке
-            this.centerCameraOn(mapX, mapY);
-            
-            console.log(`Клик по мини-карте: ${x}, ${y} -> Карта: ${mapX}, ${mapY}`);
+            // Проверяем, что координаты в пределах карты
+            if (mapX >= 0 && mapX < this.gameMap.width && mapY >= 0 && mapY < this.gameMap.height) {
+                // Центрируем камеру на выбранной точке
+                this.centerCameraOn(mapX, mapY);
+                
+                console.log(`Клик по мини-карте: ${x}, ${y} -> Карта: ${mapX}, ${mapY}`);
+            } else {
+                console.log(`Клик за пределами карты на миникарте: ${x}, ${y}`);
+            }
         } catch (error) {
             console.error('Ошибка при обработке клика по мини-карте:', error);
         }
@@ -726,397 +923,82 @@ class Singleplayer {
         }
     }
 
-    createCommandPanel() {
-        console.log('Создание панели команд...');
+    initCameraControls() {
+        console.log('Инициализация управления камерой...');
         
-        try {
-            // Создаем панель команд
-            const commandPanel = document.createElement('div');
-            commandPanel.id = 'command-panel';
-            commandPanel.className = 'command-panel';
-            
-            // Добавляем кнопки команд
-            commandPanel.innerHTML = `
-                <div class="command-button" data-command="buildings">
-                    <div class="command-icon buildings-icon"></div>
-                    <div class="command-label">Здания</div>
-                </div>
-                <div class="command-button" data-command="defenses">
-                    <div class="command-icon defenses-icon"></div>
-                    <div class="command-label">Оборона</div>
-                </div>
-                <div class="command-button" data-command="infantry">
-                    <div class="command-icon infantry-icon"></div>
-                    <div class="command-label">Пехота</div>
-                </div>
-                <div class="command-button" data-command="vehicles">
-                    <div class="command-icon vehicles-icon"></div>
-                    <div class="command-label">Техника</div>
-                </div>
-                <div class="command-button" data-command="aircraft">
-                    <div class="command-icon aircraft-icon"></div>
-                    <div class="command-label">Авиация</div>
-                </div>
-            `;
-            
-            // Добавляем панель на игровой экран
-            const gameInterface = document.getElementById('gameinterfacescreen');
-            gameInterface.appendChild(commandPanel);
-            
-            // Добавляем обработчики клика по кнопкам
-            const commandButtons = commandPanel.querySelectorAll('.command-button');
-            commandButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const command = button.getAttribute('data-command');
-                    this.handleCommandClick(command, e);
-                });
-            });
-            
-            console.log('Панель команд создана');
-        } catch (error) {
-            console.error('Ошибка при создании панели команд:', error);
-        }
-    }
-
-    handleCommandClick(command, e) {
-        console.log(`Клик по команде: ${command}`);
-        
-        // Получаем контекстное меню
-        const contextMenu = document.getElementById('context-menu');
-        if (!contextMenu) {
-            console.error('Элемент context-menu не найден!');
-            return;
+        // Создаем объект камеры, если его нет
+        if (!game.camera) {
+            game.camera = {
+                x: 0,
+                y: 0
+            };
         }
         
-        // Очищаем меню
-        contextMenu.innerHTML = '';
+        // Скорость перемещения камеры
+        const cameraSpeed = 10;
         
-        // Заполняем меню в зависимости от команды
-        switch (command) {
-            case 'buildings':
-                this.fillBuildingsMenu(contextMenu);
-                break;
-            case 'defenses':
-                this.fillDefensesMenu(contextMenu);
-                break;
-            case 'infantry':
-                this.fillInfantryMenu(contextMenu);
-                break;
-            case 'vehicles':
-                this.fillVehiclesMenu(contextMenu);
-                break;
-            case 'aircraft':
-                this.fillAircraftMenu(contextMenu);
-                break;
-        }
+        // Состояние клавиш
+        const keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            ArrowUp: false,
+            ArrowLeft: false,
+            ArrowDown: false,
+            ArrowRight: false
+        };
         
-        // Отображаем меню
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = `${e.clientX}px`;
-        contextMenu.style.top = `${e.clientY}px`;
-        
-        // Закрываем меню при клике вне его
-        const closeMenu = (e) => {
-            if (!contextMenu.contains(e.target)) {
-                contextMenu.style.display = 'none';
-                document.removeEventListener('click', closeMenu);
+        // Обработчик нажатия клавиш
+        const handleKeyDown = (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = true;
             }
         };
         
-        // Добавляем обработчик с небольшой задержкой
-        setTimeout(() => {
-            document.addEventListener('click', closeMenu);
-        }, 100);
-    }
-
-    fillBuildingsMenu(menu) {
-        // Добавляем пункты меню для зданий
-        const buildings = [
-            { name: 'Power Plant', description: 'Generates energy', cost: { metal: 100, gold: 50 }, icon: '🏭' },
-            { name: 'Barracks', description: 'Trains infantry units', cost: { metal: 150, gold: 50 }, icon: '🏢' },
-            { name: 'Factory', description: 'Builds vehicles', cost: { metal: 200, gold: 100 }, icon: '🏭' }
-        ];
-        
-        buildings.forEach(building => {
-            const item = document.createElement('div');
-            item.className = 'context-menu-item';
-            item.innerHTML = `
-                <div class="icon">${building.icon}</div>
-                <div class="info">
-                    <div class="name">${building.name}</div>
-                    <div class="description">${building.description}</div>
-                </div>
-                <div class="cost">M:${building.cost.metal} G:${building.cost.gold}</div>
-            `;
-            
-            // Добавляем обработчик клика
-            item.addEventListener('click', () => {
-                this.startPlacingBuilding(building);
-                menu.style.display = 'none';
-            });
-            
-            menu.appendChild(item);
-        });
-    }
-
-    fillDefensesMenu(menu) {
-        // Добавляем пункты меню для оборонительных сооружений
-        const defenses = [
-            { name: 'Turret', description: 'Basic defense', cost: { metal: 75, gold: 25 }, icon: '🗼' },
-            { name: 'Anti-Air', description: 'Shoots down aircraft', cost: { metal: 100, gold: 50 }, icon: '🗼' },
-            { name: 'Shield Generator', description: 'Protects nearby units', cost: { metal: 150, gold: 100 }, icon: '🛡️' }
-        ];
-        
-        defenses.forEach(defense => {
-            const item = document.createElement('div');
-            item.className = 'context-menu-item';
-            item.innerHTML = `
-                <div class="icon">${defense.icon}</div>
-                <div class="info">
-                    <div class="name">${defense.name}</div>
-                    <div class="description">${defense.description}</div>
-                </div>
-                <div class="cost">M:${defense.cost.metal} G:${defense.cost.gold}</div>
-            `;
-            
-            // Добавляем обработчик клика
-            item.addEventListener('click', () => {
-                this.startPlacingDefense(defense);
-                menu.style.display = 'none';
-            });
-            
-            menu.appendChild(item);
-        });
-    }
-
-    fillInfantryMenu(menu) {
-        // Добавляем пункты меню для пехоты
-        const infantry = [
-            { name: 'Rifleman', description: 'Basic infantry', cost: { metal: 20, gold: 10 }, icon: '👤' },
-            { name: 'Rocket Soldier', description: 'Anti-vehicle infantry', cost: { metal: 30, gold: 20 }, icon: '👤' },
-            { name: 'Engineer', description: 'Repairs buildings', cost: { metal: 40, gold: 30 }, icon: '👷' }
-        ];
-        
-        infantry.forEach(unit => {
-            const item = document.createElement('div');
-            item.className = 'context-menu-item';
-            item.innerHTML = `
-                <div class="icon">${unit.icon}</div>
-                <div class="info">
-                    <div class="name">${unit.name}</div>
-                    <div class="description">${unit.description}</div>
-                </div>
-                <div class="cost">M:${unit.cost.metal} G:${unit.cost.gold}</div>
-            `;
-            
-            // Добавляем обработчик клика
-            item.addEventListener('click', () => {
-                this.trainUnit(unit);
-                menu.style.display = 'none';
-            });
-            
-            menu.appendChild(item);
-        });
-    }
-
-    fillVehiclesMenu(menu) {
-        // Добавляем пункты меню для техники
-        const vehicles = [
-            { name: 'Scout Tank', description: 'Fast but weak', cost: { metal: 50, gold: 30 }, icon: '🚙' },
-            { name: 'Battle Tank', description: 'Strong but slow', cost: { metal: 100, gold: 50 }, icon: '🚚' },
-            { name: 'Artillery', description: 'Long range attack', cost: { metal: 120, gold: 70 }, icon: '🚛' }
-        ];
-        
-        vehicles.forEach(vehicle => {
-            const item = document.createElement('div');
-            item.className = 'context-menu-item';
-            item.innerHTML = `
-                <div class="icon">${vehicle.icon}</div>
-                <div class="info">
-                    <div class="name">${vehicle.name}</div>
-                    <div class="description">${vehicle.description}</div>
-                </div>
-                <div class="cost">M:${vehicle.cost.metal} G:${vehicle.cost.gold}</div>
-            `;
-            
-            // Добавляем обработчик клика
-            item.addEventListener('click', () => {
-                this.buildVehicle(vehicle);
-                menu.style.display = 'none';
-            });
-            
-            menu.appendChild(item);
-        });
-    }
-
-    fillAircraftMenu(menu) {
-        // Добавляем пункты меню для авиации
-        const aircraft = [
-            { name: 'Scout Drone', description: 'Reveals map', cost: { metal: 40, gold: 30 }, icon: '🚁' },
-            { name: 'Fighter', description: 'Air superiority', cost: { metal: 80, gold: 60 }, icon: '✈️' },
-            { name: 'Bomber', description: 'Destroys buildings', cost: { metal: 120, gold: 80 }, icon: '🛩️' }
-        ];
-        
-        aircraft.forEach(aircraft => {
-            const item = document.createElement('div');
-            item.className = 'context-menu-item';
-            item.innerHTML = `
-                <div class="icon">${aircraft.icon}</div>
-                <div class="info">
-                    <div class="name">${aircraft.name}</div>
-                    <div class="description">${aircraft.description}</div>
-                </div>
-                <div class="cost">M:${aircraft.cost.metal} G:${aircraft.cost.gold}</div>
-            `;
-            
-            // Добавляем обработчик клика
-            item.addEventListener('click', () => {
-                this.buildAircraft(aircraft);
-                menu.style.display = 'none';
-            });
-            
-            menu.appendChild(item);
-        });
-    }
-
-    startPlacingBuilding(building) {
-        console.log(`Начинаем размещение здания: ${building.name}`);
-        
-        // Проверяем наличие ресурсов
-        if (!GameState.hasEnoughResources(building.cost)) {
-            console.log('Недостаточно ресурсов для строительства');
-            this.showFloatingMessage('Not enough resources', 100, 100);
-            return;
-        }
-        
-        // Создаем призрак здания, который следует за курсором
-        const ghost = document.createElement('div');
-        ghost.className = 'building-ghost';
-        ghost.style.width = '64px';
-        ghost.style.height = '64px';
-        ghost.style.position = 'absolute';
-        ghost.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
-        ghost.style.border = '2px solid rgba(0, 255, 0, 0.7)';
-        ghost.style.zIndex = '50';
-        ghost.style.pointerEvents = 'none';
-        
-        // Добавляем призрак на игровой экран
-        const gameInterface = document.getElementById('gameinterfacescreen');
-        gameInterface.appendChild(ghost);
-        
-        // Обработчик движения мыши
-        const mouseMoveHandler = (e) => {
-            const rect = gameInterface.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            // Привязываем к сетке
-            const gridX = Math.floor(x / TILE_SIZE) * TILE_SIZE;
-            const gridY = Math.floor(y / TILE_SIZE) * TILE_SIZE;
-            
-            ghost.style.left = `${gridX}px`;
-            ghost.style.top = `${gridY}px`;
+        // Обработчик отпускания клавиш
+        const handleKeyUp = (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = false;
+            }
         };
         
-        // Обработчик клика
-        const clickHandler = (e) => {
-            const rect = gameInterface.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+        // Добавляем обработчики событий
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        
+        // Функция обновления камеры
+        const updateCamera = () => {
+            if (!game.camera || !this.gameMap) return;
             
-            // Привязываем к сетке
-            const gridX = Math.floor(x / TILE_SIZE) * TILE_SIZE;
-            const gridY = Math.floor(y / TILE_SIZE) * TILE_SIZE;
+            // Перемещение камеры
+            if (keys.w || keys.ArrowUp) {
+                game.camera.y = Math.max(0, game.camera.y - cameraSpeed);
+            }
+            if (keys.s || keys.ArrowDown) {
+                game.camera.y = Math.min(this.gameMap.height * this.gameMap.tileSize - game.canvasHeight, game.camera.y + cameraSpeed);
+            }
+            if (keys.a || keys.ArrowLeft) {
+                game.camera.x = Math.max(0, game.camera.x - cameraSpeed);
+            }
+            if (keys.d || keys.ArrowRight) {
+                game.camera.x = Math.min(this.gameMap.width * this.gameMap.tileSize - game.canvasWidth, game.camera.x + cameraSpeed);
+            }
             
-            // Размещаем здание
-            this.placeBuilding(building, gridX, gridY);
+            // Обновляем положение карты
+            const mapContainer = document.getElementById('map-container');
+            if (mapContainer) {
+                mapContainer.style.transform = `translate(${-game.camera.x}px, ${-game.camera.y}px)`;
+            }
             
-            // Удаляем призрак и обработчики
-            ghost.remove();
-            document.removeEventListener('mousemove', mouseMoveHandler);
-            document.removeEventListener('click', clickHandler);
-            document.removeEventListener('contextmenu', contextMenuHandler);
+            // Обновляем миникарту
+            this.renderMinimap();
         };
         
-        // Обработчик правого клика для отмены
-        const contextMenuHandler = (e) => {
-            e.preventDefault();
-            
-            // Удаляем призрак и обработчики
-            ghost.remove();
-            document.removeEventListener('mousemove', mouseMoveHandler);
-            document.removeEventListener('click', clickHandler);
-            document.removeEventListener('contextmenu', contextMenuHandler);
-            
-            console.log('Размещение здания отменено');
-        };
+        // Запускаем обновление камеры
+        this.cameraInterval = setInterval(updateCamera, 16); // ~60 FPS
         
-        // Добавляем обработчики
-        document.addEventListener('mousemove', mouseMoveHandler);
-        document.addEventListener('click', clickHandler);
-        document.addEventListener('contextmenu', contextMenuHandler);
-    }
-
-    placeBuilding(building, x, y) {
-        console.log(`Размещаем здание: ${building.name} на координатах: ${x}, ${y}`);
-        
-        // Проверяем, что место свободно
-        const tile = this.gameMap.tiles[y][x];
-        if (tile.type !== 'water' && tile.type !== 'mountain' && tile.type !== 'forest' && !tile.resource) {
-            // Создаем элемент здания
-            const buildingElement = document.createElement('div');
-            buildingElement.className = `building building-${building.name.toLowerCase().replace(/\s+/g, '-')}`;
-            buildingElement.style.left = `${x * TILE_SIZE}px`;
-            buildingElement.style.top = `${y * TILE_SIZE}px`;
-            
-            // Добавляем здание на игровой экран
-            const gameInterface = document.getElementById('gameinterfacescreen');
-            gameInterface.appendChild(buildingElement);
-            
-            // Создаем объект здания
-            const buildingObj = {
-                element: buildingElement,
-                x: x / TILE_SIZE,
-                y: y / TILE_SIZE,
-                health: 1000,
-                maxHealth: 1000,
-                type: building.name.toLowerCase().replace(/\s+/g, '-'),
-                owner: 'player'
-            };
-            
-            // Добавляем здание в список сущностей
-            if (!GameState.entities) GameState.entities = [];
-            GameState.entities.push(buildingObj);
-            
-            // Отмечаем тайл как занятый зданием
-            this.gameMap.tiles[y][x].resource = buildingObj;
-            
-            console.log(`Здание ${building.name} размещено на координатах: ${x}, ${y}`);
-        } else {
-            console.log(`Недостаточно места для размещения здания ${building.name}`);
-            this.showFloatingMessage('Not enough space', x * TILE_SIZE, y * TILE_SIZE);
-        }
-    }
-
-    // Заглушки для методов, которые будут реализованы позже
-    startPlacingDefense(defense) {
-        console.log(`Начинаем размещение обороны: ${defense.name}`);
-        this.showFloatingMessage('Not implemented yet', 100, 100);
-    }
-
-    trainUnit(unit) {
-        console.log(`Тренируем юнита: ${unit.name}`);
-        this.showFloatingMessage('Not implemented yet', 100, 100);
-    }
-
-    buildVehicle(vehicle) {
-        console.log(`Строим технику: ${vehicle.name}`);
-        this.showFloatingMessage('Not implemented yet', 100, 100);
-    }
-
-    buildAircraft(aircraft) {
-        console.log(`Строим авиацию: ${aircraft.name}`);
-        this.showFloatingMessage('Not implemented yet', 100, 100);
+        console.log('Управление камерой инициализировано');
     }
 }
 

@@ -91,92 +91,22 @@ export const Interface = {
     
     // Отображение контекстного меню
     showContextMenu(x, y) {
-        console.log(`Показываем контекстное меню на координатах ${x}, ${y}`);
-        
-        // Получаем контекстное меню
-        let contextMenu = document.getElementById('context-menu');
-        
-        // Если меню не существует, создаем его
-        if (!contextMenu) {
-            contextMenu = document.createElement('div');
-            contextMenu.id = 'context-menu';
-            document.getElementById('gameinterfacescreen').appendChild(contextMenu);
-        }
-        
-        // Очищаем меню
-        contextMenu.innerHTML = '';
-        
-        // Заполняем меню базовыми действиями
-        contextMenu.innerHTML = `
-            <div class="context-menu-item" data-action="move">
-                <div class="icon">🚶</div>
-                <div class="info">
-                    <div class="name">Переместиться</div>
-                    <div class="description">Переместить выбранные юниты</div>
-                </div>
-            </div>
-            <div class="context-menu-item" data-action="attack">
-                <div class="icon">⚔️</div>
-                <div class="info">
-                    <div class="name">Атаковать</div>
-                    <div class="description">Атаковать цель</div>
-                </div>
-            </div>
-            <div class="context-menu-item" data-action="patrol">
-                <div class="icon">👁️</div>
-                <div class="info">
-                    <div class="name">Патрулировать</div>
-                    <div class="description">Патрулировать область</div>
-                </div>
-            </div>
-        `;
-        
-        // Добавляем обработчики для пунктов меню
-        contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const action = item.getAttribute('data-action');
-                this.handleContextMenuAction(action, x, y);
-                contextMenu.style.display = 'none';
-            });
-        });
-        
-        // Отображаем меню
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-        
-        // Закрываем меню при клике вне его
-        const closeMenu = (e) => {
-            if (!contextMenu.contains(e.target)) {
-                contextMenu.style.display = 'none';
-                document.removeEventListener('click', closeMenu);
-            }
-        };
-        
-        // Добавляем обработчик с небольшой задержкой
-        setTimeout(() => {
-            document.addEventListener('click', closeMenu);
-        }, 100);
+        console.log('Контекстное меню отключено');
     },
     
     // Обработка действий из контекстного меню
     handleContextMenuAction(action, x, y) {
-        console.log(`Выполняем действие ${action} на координатах ${x}, ${y}`);
-        
-        // Здесь будет код для обработки различных действий
-        switch (action) {
-            case 'move':
-                console.log('Перемещение юнитов');
-                break;
-            case 'attack':
-                console.log('Атака цели');
-                break;
-            case 'patrol':
-                console.log('Патрулирование области');
-                break;
-            default:
-                console.log(`Неизвестное действие: ${action}`);
-        }
+        console.log('Обработка контекстного меню отключена');
+    },
+    
+    // Создание контекстного меню для базы
+    createBaseContextMenu(base) {
+        console.log('Контекстное меню базы отключено');
+    },
+    
+    // Создание контекстного меню для юнита
+    createUnitContextMenu(unit) {
+        console.log('Контекстное меню юнита отключено');
     }
 };
 

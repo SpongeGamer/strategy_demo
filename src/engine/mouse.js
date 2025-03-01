@@ -104,7 +104,7 @@ export const Mouse = {
             } else if (e.button === 2) {
                 // Правая кнопка мыши
                 this.rightButtonDown = false;
-                this.handleRightClick(this.x, this.y);
+                this.handleRightClick(e);
             }
         });
         
@@ -197,11 +197,17 @@ export const Mouse = {
         // Например, выделение юнита или здания
     },
     
-    handleRightClick(x, y) {
-        console.log(`Правый клик мышью в точке (${x}, ${y})`);
+    handleRightClick(e) {
+        e.preventDefault(); // Предотвращаем стандартное контекстное меню
         
-        // Здесь будет логика обработки правого клика мышью
-        // Например, отправка приказа выбранным юнитам
+        // Получаем координаты клика
+        const x = e.clientX;
+        const y = e.clientY;
+        
+        console.log(`Правый клик на координатах: ${x}, ${y}`);
+        
+        // Больше не показываем контекстное меню
+        // Теперь обработка правого клика происходит в классе Singleplayer
     },
     
     isOverElement(element) {
