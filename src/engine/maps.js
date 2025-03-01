@@ -517,6 +517,7 @@ export class Map {
                 
                 // Для лесных тайлов добавляем дерево
                 if (tile.type === TILE_TYPES.FOREST) {
+                    console.log(`Добавляем дерево на позиции ${x}, ${y}`);
                     const treeElement = document.createElement('div');
                     treeElement.className = 'tree';
                     tileElement.appendChild(treeElement);
@@ -838,6 +839,7 @@ export const Maps = {
                 
                 // Для лесных тайлов добавляем дерево
                 if (tile.type === TILE_TYPES.FOREST) {
+                    console.log(`Добавляем дерево на позиции ${x}, ${y}`);
                     const treeElement = document.createElement('div');
                     treeElement.className = 'tree';
                     tileElement.appendChild(treeElement);

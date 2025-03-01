@@ -233,12 +233,13 @@ class Singleplayer {
         // Создаем элемент ресурса
         const resourceElement = document.createElement('div');
         resourceElement.className = `resource resource-${type}`;
-        resourceElement.style.left = `${x * TILE_SIZE}px`;
-        resourceElement.style.top = `${y * TILE_SIZE}px`;
         
-        // Используем простые цветные квадраты вместо эмодзи
-        resourceElement.style.backgroundColor = type === 'metal' ? '#aaaaaa' : '#ffcc00';
-        resourceElement.style.border = '1px solid #000';
+        // Устанавливаем позицию ресурса в центре тайла
+        // Добавляем TILE_SIZE/2 к координатам, чтобы центрировать ресурс на тайле
+        resourceElement.style.left = `${(x * TILE_SIZE) + (TILE_SIZE/2)}px`;
+        resourceElement.style.top = `${(y * TILE_SIZE) + (TILE_SIZE/2)}px`;
+        
+        console.log(`Размещаем ресурс ${type} на позиции ${x}, ${y} (${resourceElement.style.left}, ${resourceElement.style.top})`);
         
         // Добавляем ресурс в контейнер карты
         const mapContainer = document.getElementById('map-container');
