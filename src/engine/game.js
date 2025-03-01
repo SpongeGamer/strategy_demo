@@ -6,6 +6,7 @@ import { buildings } from '../entities/buildings/buildings.js';
 import { vehicles } from '../entities/vehicles/vehicles.js';
 import { aircraft } from '../entities/aircraft/aircraft.js';
 import { resources } from '../entities/resources/resources.js';
+import { units } from '../entities/units/units.js';
 
 // Экспортируемые переменные
 export let game = {
@@ -14,7 +15,6 @@ export let game = {
     vehiclesList: [],
     aircraftList: [],
     terrain: [],
-    units: [], // Массив для хранения юнитов
     
     // Ресурсы игрока
     playerResources: {
@@ -843,84 +843,36 @@ export let game = {
 
     // Отрисовка юнитов
     drawUnits: function() {
-        this.units.forEach(unit => {
-            const screenX = unit.x * maps.tileSize;
-            const screenY = unit.y * maps.tileSize;
-            const size = maps.tileSize;
-
-            // Основная форма юнита
-            this.backgroundContext.fillStyle = unit.color;
-            this.backgroundContext.beginPath();
-            this.backgroundContext.arc(
-                screenX + size/2,
-                screenY + size/2,
-                size/2 - 4,
-                0,
-                Math.PI * 2
-            );
-            this.backgroundContext.fill();
-
-            // Блик
-            const gradient = this.backgroundContext.createLinearGradient(
-                screenX, screenY,
-                screenX + size/2, screenY + size/2
-            );
-            gradient.addColorStop(0, 'rgba(255,255,255,0.3)');
-            gradient.addColorStop(1, 'rgba(255,255,255,0)');
-            this.backgroundContext.fillStyle = gradient;
-            this.backgroundContext.fill();
-
-            // Если юнит выбран, рисуем выделение
-            if (unit === this.selectedUnit) {
-                this.backgroundContext.strokeStyle = '#4a9eff';
-                this.backgroundContext.lineWidth = 2;
-                this.backgroundContext.beginPath();
-                this.backgroundContext.arc(
-                    screenX + size/2,
-                    screenY + size/2,
-                    size/2,
-                    0,
-                    Math.PI * 2
-                );
-                this.backgroundContext.stroke();
-
-                // Пульсирующее свечение
-                const time = Date.now() / 1000;
-                const pulseSize = Math.sin(time * 4) * 2 + size/2 + 4;
-                this.backgroundContext.strokeStyle = 'rgba(74,158,255,0.3)';
-                this.backgroundContext.beginPath();
-                this.backgroundContext.arc(
-                    screenX + size/2,
-                    screenY + size/2,
-                    pulseSize,
-                    0,
-                    Math.PI * 2
-                );
-                this.backgroundContext.stroke();
+        const tileSize = maps.tileSize;
+        
+        // Рисуем все юниты
+        units.list.forEach(unit => {
+            // Проверяем, видим ли юнит через туман войны
+            if (game.fogOfWar && !game.fogOfWar.isVisible(unit.x, unit.y)) {
+                return;
             }
-
-            // Индикатор здоровья
-            const healthBarWidth = size - 8;
+            
+            // Рисуем юнит
+            game.foregroundContext.fillStyle = unit.color;
+            game.foregroundContext.fillRect(
+                unit.x * tileSize, 
+                unit.y * tileSize, 
+                tileSize, 
+                tileSize
+            );
+            
+            // Рисуем полоску здоровья
+            const healthBarWidth = tileSize * 0.8;
             const healthBarHeight = 4;
-            const healthPercentage = unit.hp / 100;
-
-            // Фон полоски здоровья
-            this.backgroundContext.fillStyle = 'rgba(0,0,0,0.5)';
-            this.backgroundContext.fillRect(
-                screenX + 4,
-                screenY - 8,
-                healthBarWidth,
-                healthBarHeight
-            );
-
-            // Полоска здоровья
-            this.backgroundContext.fillStyle = unit.hp > 50 ? '#2ecc71' : unit.hp > 25 ? '#f1c40f' : '#e74c3c';
-            this.backgroundContext.fillRect(
-                screenX + 4,
-                screenY - 8,
-                healthBarWidth * healthPercentage,
-                healthBarHeight
-            );
+            const healthBarX = unit.x * tileSize + (tileSize - healthBarWidth) / 2;
+            const healthBarY = unit.y * tileSize - 6;
+            
+            game.foregroundContext.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            game.foregroundContext.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+            
+            const healthPercent = unit.hp / unit.maxHp;
+            game.foregroundContext.fillStyle = `hsl(${120 * healthPercent}, 100%, 50%)`;
+            game.foregroundContext.fillRect(healthBarX, healthBarY, healthBarWidth * healthPercent, healthBarHeight);
         });
     },
 
