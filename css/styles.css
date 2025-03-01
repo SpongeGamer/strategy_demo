@@ -1,0 +1,521 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #1a1a1a;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #fff;
+}
+
+.gamelayer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    display: none;
+}
+
+#gamecontainer {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+#gamestartscreen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.8);
+    gap: 20px;
+}
+
+#gamestartscreen h1 {
+    font-size: 48px;
+    color: #4a9eff;
+    text-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+    margin-bottom: 40px;
+}
+
+#singleplayer, #multiplayer {
+    font-size: 24px;
+    color: #fff;
+    cursor: pointer;
+    padding: 15px 40px;
+    background: linear-gradient(to bottom, #4a9eff 0%, #2980b9 100%);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+}
+
+#singleplayer:hover, #multiplayer:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(74, 158, 255, 0.5);
+}
+
+#loadingscreen {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#loadingmessage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 24px;
+}
+
+#gameinterfacescreen {
+    display: none;
+}
+
+#gameinterfacescreen.active {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #1a1a1a;
+}
+
+#sidebar {
+    display: none;
+}
+
+#resources {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    display: flex;
+    gap: 20px;
+    pointer-events: auto;
+}
+
+.resource {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    color: #eee;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.resource:last-child {
+    margin-bottom: 0;
+}
+
+.resource-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.resource-icon::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
+}
+
+.trees { 
+    background: linear-gradient(to bottom, #2ecc71, #27ae60);
+}
+
+.metal { 
+    background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+}
+
+.gold { 
+    background: linear-gradient(to bottom, #f1c40f, #f39c12);
+}
+
+#gamecanvasarea {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background: #1a1a1a;
+}
+
+#gamebackgroundcanvas,
+#gameforegroundcanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+}
+
+#gameinterface {
+    position: fixed;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+}
+
+#minimap {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 200px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+#minimapcanvas {
+    width: 100%;
+    height: 100%;
+}
+
+#sidebarbuttons {
+    position: absolute;
+    bottom: 240px;
+    right: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    pointer-events: auto;
+}
+
+#sidebarbuttons input[type="button"] {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(to bottom, #34495e, #2c3e50);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#sidebarbuttons input[type="button"]:hover {
+    background: linear-gradient(to bottom, #3498db, #2980b9);
+    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+}
+
+#sidebarbuttons input[type="button"]:active {
+    transform: translateY(0);
+    box-shadow: 0 0 5px rgba(74, 158, 255, 0.3);
+}
+
+/* Иконки для кнопок */
+#starportbutton {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.8l6 3v6.4l-6 3-6-3V7.8l6-3z"/></svg>') !important;
+    background-size: 32px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+#turretbutton {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path d="M12 7v10M7 12h10"/></svg>') !important;
+    background-size: 32px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+#scouttankbutton {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M20 10h-3V8.5c0-1.1-.9-2-2-2h-6c-1.1 0-2 .9-2 2V10H4c-1.1 0-2 .9-2 2v3h20v-3c0-1.1-.9-2-2-2z"/></svg>') !important;
+    background-size: 32px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+#heavytankbutton {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M20 10h-3V8.5c0-1.1-.9-2-2-2h-6c-1.1 0-2 .9-2 2V10H4c-1.1 0-2 .9-2 2v3h20v-3c0-1.1-.9-2-2-2z"/><path d="M4 15h16v2H4z"/></svg>') !important;
+    background-size: 32px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+#harvesterbutton {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M17.5 15.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zM6 16c.83 0 1.5-.67 1.5-1.5S6.83 13 6 13s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm13.5-6H4V8h16v2z"/></svg>') !important;
+    background-size: 32px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+#context-menu {
+    position: absolute;
+    background: rgba(0, 10, 20, 0.95);
+    border: 1px solid #4a9eff;
+    box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+    border-radius: 8px;
+    padding: 8px;
+    display: none;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    pointer-events: auto;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 10px;
+}
+
+.context-menu-group {
+    border-bottom: 1px solid rgba(74, 158, 255, 0.3);
+    padding: 8px 0;
+}
+
+.context-menu-group:last-child {
+    border-bottom: none;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    margin: 4px 0;
+}
+
+.context-menu-item:hover {
+    background: rgba(74, 158, 255, 0.15);
+    border-color: #4a9eff;
+    transform: translateX(4px);
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.2);
+}
+
+.context-menu-item .icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #4a9eff, #2980b9);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.context-menu-item .icon::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
+}
+
+.context-menu-item .info {
+    flex: 1;
+}
+
+.context-menu-item .name {
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #4a9eff;
+}
+
+.context-menu-item .description {
+    font-size: 0.9em;
+    color: #aaa;
+}
+
+.context-menu-item .cost {
+    padding: 4px 8px;
+    background: rgba(74, 158, 255, 0.1);
+    border: 1px solid #4a9eff;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #4a9eff;
+}
+
+.context-menu-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+.context-menu-item.disabled:hover {
+    background: none;
+    border-color: transparent;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Нижняя панель команд */
+#command-panel {
+    position: absolute;
+    bottom: 218px;
+    right: -20px;
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(0, 10, 20, 0.95);
+    border: 1px solid #4a9eff;
+    box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+    transform: scale(0.8);
+    pointer-events: auto;
+}
+
+.command-group {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    border-right: 1px solid rgba(74, 158, 255, 0.3);
+}
+
+.command-group:last-child {
+    border-right: none;
+}
+
+.command-button {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(to bottom, #1a2a3a, #0a1a2a);
+    border: 1px solid #4a9eff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    margin: 0 4px;
+}
+
+.command-button:hover {
+    background: linear-gradient(to bottom, #2a3a4a, #1a2a3a);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(74, 158, 255, 0.2);
+}
+
+.command-button:active {
+    transform: translateY(0);
+}
+
+.command-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+}
+
+.command-button.buildings { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>'); }
+.command-button.defenses { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>'); }
+.command-button.infantry { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'); }
+.command-button.vehicles { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-5h14v5z"/></svg>'); }
+.command-button.aircraft { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234a9eff"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>'); }
+
+/* Выделение юнита */
+.unit-selected {
+    position: absolute;
+    border: 2px solid #4a9eff;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+    pointer-events: none;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Подсветка при наведении на кнопки */
+.command-button:hover::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border: 2px solid #4a9eff;
+    border-radius: 8px;
+    animation: glow 1.5s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px #4a9eff,
+                    0 0 10px #4a9eff,
+                    0 0 15px #4a9eff;
+    }
+    to {
+        box-shadow: 0 0 10px #4a9eff,
+                    0 0 20px #4a9eff,
+                    0 0 30px #4a9eff;
+    }
+}
+
+/* Полоски здоровья и прогресса базы */
+.base-status {
+    position: absolute;
+    width: 96px; /* 3 тайла по 32px */
+    pointer-events: none;
+}
+
+.base-health {
+    height: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    margin-bottom: 4px;
+    overflow: hidden;
+}
+
+.base-health .fill {
+    height: 100%;
+    background: linear-gradient(to right, #2ecc71, #27ae60);
+    transition: width 0.3s ease;
+}
+
+.base-progress {
+    height: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.base-progress .fill {
+    height: 100%;
+    background: linear-gradient(to right, #3498db, #2980b9);
+    transition: width 0.3s linear;
+}
+
+/* Анимация создания юнита */
+@keyframes unitSpawn {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.unit-spawning {
+    animation: unitSpawn 0.5s ease-out;
+}
