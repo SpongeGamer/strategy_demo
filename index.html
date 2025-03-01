@@ -6,28 +6,28 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         
         <!-- Базовые модули -->
-        <script src="src/engine/loader.js" type="module"></script>
-        <script src="src/engine/mouse.js" type="module"></script>
-        <script src="src/engine/maps.js" type="module"></script>
-        <script src="src/engine/game.js" type="module"></script>
+        <script src="./src/engine/loader.js" type="module"></script>
+        <script src="./src/engine/mouse.js" type="module"></script>
+        <script src="./src/engine/maps.js" type="module"></script>
+        <script src="./src/engine/game.js" type="module"></script>
         
         <!-- Игровые сущности -->
-        <script src="src/entities/buildings/buildings.js" type="module"></script>
-        <script src="src/entities/units/units.js" type="module"></script>
-        <script src="src/entities/vehicles/vehicles.js" type="module"></script>
-        <script src="src/entities/aircraft/aircraft.js" type="module"></script>
-        <script src="src/entities/resources/resources.js" type="module"></script>
+        <script src="./src/entities/buildings/buildings.js" type="module"></script>
+        <script src="./src/entities/units/units.js" type="module"></script>
+        <script src="./src/entities/vehicles/vehicles.js" type="module"></script>
+        <script src="./src/entities/aircraft/aircraft.js" type="module"></script>
+        <script src="./src/entities/resources/resources.js" type="module"></script>
         
         <!-- Вспомогательные модули -->
-        <script src="src/utils/pathfinding-browser.min.js"></script>
-        <script src="src/utils/astar.js" type="module"></script>
-        <script src="src/utils/fog.js" type="module"></script>
-        <script src="src/ui/sidebar.js" type="module"></script>
-        <script src="src/ui/interface.js" type="module"></script>
-        <script src="src/ui/minimap.js" type="module"></script>
+        <script src="./src/utils/pathfinding-browser.min.js"></script>
+        <script src="./src/utils/astar.js" type="module"></script>
+        <script src="./src/utils/fog.js" type="module"></script>
+        <script src="./src/ui/sidebar.js" type="module"></script>
+        <script src="./src/ui/interface.js" type="module"></script>
+        <script src="./src/ui/minimap.js" type="module"></script>
         
         <!-- Игровые режимы -->
-        <script src="src/game-modes/singleplayer.js" type="module"></script>
+        <script src="./src/game-modes/singleplayer.js" type="module"></script>
         
         <!-- Основной игровой модуль -->
         <script type="module">
@@ -38,16 +38,24 @@
             import { initSidebar } from './src/ui/sidebar.js';
             
             window.addEventListener('load', () => {
+                console.log('Страница загружена');
                 game.init();
+                console.log('Игра инициализирована');
                 initInterface();
+                console.log('Интерфейс инициализирован');
                 initMinimap();
+                console.log('Миникарта инициализирована');
                 initSidebar();
+                console.log('Боковая панель инициализирована');
                 
-                document.getElementById('singleplayer').addEventListener('click', singleplayer.start);
+                document.getElementById('singleplayer').addEventListener('click', () => {
+                    console.log('Нажата кнопка Campaign');
+                    singleplayer.start();
+                });
             });
         </script>
 
-        <link rel="stylesheet" href="src/css/styles.css" type="text/css" media="screen" charset="utf-8">
+        <link rel="stylesheet" href="./src/css/styles.css" type="text/css" media="screen" charset="utf-8">
     </head>
     <body>
         <main id="gamecontainer">
